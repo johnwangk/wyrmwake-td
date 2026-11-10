@@ -204,10 +204,11 @@ let save = loadSave();
 
 // ---------- Pixel canvas / layout ----------
 // The game renders into a fixed 360x640 native canvas, letterboxed in the safe area.
-// Fit scale s = min(availW/360, availH/640) in CSS px. Use the whole-number scale floor(s)
-// when it still covers at least 80% of that fit; otherwise use the fractional fit so small
-// screens fill. Sampling stays nearest-neighbour either way. The displayed CSS size is snapped
-// so that CSS px * devicePixelRatio is a whole number of device pixels.
+// Fit scale s = min(availW/360, availH/640) in CSS px. d = s * devicePixelRatio is the
+// fit in device px per art px. Use k = floor(d) when k >= 1 and k/d >= 0.80 (CSS size
+// 360*k/DPR); otherwise use the fractional fit so small screens fill. Sampling stays
+// nearest-neighbour either way. The displayed size is snapped onto the 1/64 CSS-px
+// layout grid, as close as possible to a whole number of device pixels.
 const NW = 360, NH = 640;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d', {alpha:false});
 cv.width = NW; cv.height = NH;
@@ -215,25 +216,29 @@ const safeEl = document.getElementById('safe'), rotEl = document.getElementById(
 let vw=0, vh=0, dpr=1, pixK=1, scaleMode='integer', LH=NH;
 const L = {}; // layout (logical px)
 let path = [], pathLen = 0, segs = [];
-// Blink stores used lengths in 1/64 CSS px (truncating). Pick a quantum near `css` whose
-// product with devicePixelRatio is a whole device pixel, so the canvas is not sampled
-// on a fractional device-pixel phase.
-function snapLayoutPx(css, ratio){
-  if(!(ratio>0)) return Math.max(0, css);
-  const idealDev = Math.max(0, css) * ratio;
-  const n0 = Math.round(Math.max(0, css) * 64);
-  let best = Math.max(0, n0) / 64, bestScore = Infinity, bestDist = Infinity;
-  for(let dn=-512; dn<=512; dn++){
-    const n = n0 + dn; if(n < 0) continue;
-    const q = n / 64, dev = q * ratio, devRound = Math.round(dev);
-    if(Math.abs(dev - devRound) > 1e-4) continue;
-    const score = Math.abs(devRound - idealDev), dist = Math.abs(q - css);
-    if(score < bestScore - 1e-6 || (Math.abs(score - bestScore) <= 1e-6 && dist < bestDist)){
-      bestScore = score; bestDist = dist; best = q;
-    }
-  }
-  return best;
+// Chrome snaps a canvas edge to the nearest integer CSS px, then to device pixels.
+// A length whose border box is longer than that paint leaves a 1px background gap.
+// Pick the 1/64px quantum closest to `devPx` that the paint still covers.
+function paintedSpan(css, ratio){
+  const dev = Math.round(css) * ratio;
+  return Math.abs(dev - Math.round(dev)) < 1e-4 ? Math.round(dev) : Math.ceil(dev - 1e-6);
 }
+function snapSize(devPx, ratio){
+  if(!(ratio>0)) return Math.max(0, devPx);
+  const ideal = devPx / ratio, n0 = Math.round(ideal * 64);
+  let best = null, bestDist = Infinity;
+  for(let dn=-96; dn<=96; dn++){
+    const n = n0 + dn; if(n <= 0) continue;
+    const q = n / 64, box = q * ratio;
+    if(paintedSpan(q, ratio) + 1e-3 < box) continue;
+    const dist = Math.abs(q - ideal);
+    if(dist < bestDist - 1e-9){ bestDist = dist; best = q; }
+  }
+  return best == null ? Math.max(1/64, ideal) : best;
+}
+// Chrome paints a canvas at round(css) CSS px, so a .5px left leaves a 1-device-px
+// strip of the page background along the border box. Integer origins cover the box.
+function snapOrigin(css){ return Math.max(0, Math.round(css - 1e-9)); }
 function resize(){
   vw = window.innerWidth; vh = window.innerHeight; dpr = window.devicePixelRatio || 1;
   const cs = getComputedStyle(safeEl);
@@ -241,13 +246,14 @@ function resize(){
         sb = parseFloat(cs.paddingBottom)||0, sl = parseFloat(cs.paddingLeft)||0;
   const aw = Math.max(50, vw - sl - sr), ah = Math.max(50, vh - st - sb);
   const s = Math.min(aw/NW, ah/NH);                         // fit scale in CSS px
-  const whole = Math.floor(s);
+  const dFit = s * dpr;                                     // device px per art px at that fit
+  const k = Math.floor(dFit);
   const maxDevW = Math.max(1, Math.floor(aw*dpr + 1e-4));
   const maxDevH = Math.max(1, Math.floor(ah*dpr + 1e-4));
   let devW, devH;
-  if(whole >= 1 && whole / s >= 0.80){
-    devW = Math.round(NW * whole * dpr); devH = Math.round(NH * whole * dpr);
-    scaleMode = (devW >= 1 && devH >= 1 && devW <= maxDevW && devH <= maxDevH) ? 'integer' : 'fractional';
+  if(k >= 1 && k / dFit >= 0.80){
+    devW = k * NW; devH = k * NH;
+    scaleMode = (devW <= maxDevW && devH <= maxDevH) ? 'integer' : 'fractional';
   } else scaleMode = 'fractional';
   if(scaleMode === 'fractional'){
     // Fill the limiting axis; derive the other so the art stays 360:640, then snap both to device pixels.
@@ -260,11 +266,13 @@ function resize(){
     }
     devW = Math.max(1, devW); devH = Math.max(1, devH);
   }
-  const cw = snapLayoutPx(devW / dpr, dpr), ch = snapLayoutPx(devH / dpr, dpr);
-  pixK = cw * dpr / NW;                                     // device px per art px (fractional when the fit is)
+  const cw = snapSize(devW, dpr), ch = snapSize(devH, dpr);
+  pixK = devW / NW;                                         // target device px per art px (k when integer)
   cv.style.width = cw+'px'; cv.style.height = ch+'px';
-  const left = snapLayoutPx(sl + Math.max(0, (aw - cw) / 2), dpr);
-  const top = snapLayoutPx(st + Math.max(0, (ah - ch) / 2), dpr);
+  let left = snapOrigin(sl + Math.max(0, (aw - cw) / 2));
+  let top = snapOrigin(st + Math.max(0, (ah - ch) / 2));
+  if(left + cw > sl + aw) left = snapOrigin(Math.max(sl, sl + aw - cw));
+  if(top + ch > st + ah) top = snapOrigin(Math.max(st, st + ah - ch));
   cv.style.left = left+'px'; cv.style.top = top+'px';
   ctx.imageSmoothingEnabled = false;
 }
@@ -955,10 +963,18 @@ function btnArt(slot, d, hit, enabled, l1, l2){
   const y0 = Y + Math.round((a[3] - (lines.length*10 - 2)) / 2);
   lines.forEach((ln, i) => enabled ? sTxt(ln, X + W/2, y0 + i*10, F8, P.WH, 'center') : txt(ln, X + W/2, y0 + i*10, F8, P.N2, 'center'));
 }
-function goldButton(b, label, enabled, font){
+// Grow a hit rect to at least 48 logical px tall without moving its centre. Drawn art stays put.
+function padHit(b, minH){
+  minH = minH || 48;
+  if(!b || b.h >= minH) return b;
+  const grow = minH - b.h, up = grow >> 1;
+  return {x:b.x, y:Math.max(0, b.y - up), w:b.w, h:minH};
+}
+function goldButton(b, label, enabled, font, hit){
+  hit = hit || b;
   const sh = sheet('hud.btn9'); font = font || F16; const gh = font===F16 ? 16 : 8;
   if(!sh){ pxButton(b, enabled ? BTN.green : BTN.off, label, '', font); return; }
-  const st = !enabled ? 'disabled' : isPressed(b) ? 'pressed' : 'normal', dy = st==='pressed' ? 2 : 0, bot = (sh.e.slice && sh.e.slice.bottom) || 6;
+  const st = !enabled ? 'disabled' : isPressed(hit) ? 'pressed' : 'normal', dy = st==='pressed' ? 2 : 0, bot = (sh.e.slice && sh.e.slice.bottom) || 6;
   nine(sh, stateIdx(sh, st), b.x, b.y, b.w, b.h);
   txt(label, b.x + b.w/2, b.y + Math.round((b.h - bot + 2 - gh)/2) + dy, font, enabled ? P.K : P.N2, 'center');
 }
@@ -1063,7 +1079,7 @@ function drawOverlaysBasic(now){
     dim(); pxPanel(16, 90, NW-32, 340);
     txt(T('chooseBoost').toUpperCase(), NW/2, 106, F8, P.WH, 'center');
     UI.cards = [];
-    G.cards.forEach((e,k)=>{ const b = {x:28, y:128+k*98, w:NW-56, h:88}; UI.cards.push(b);
+    G.cards.forEach((e,k)=>{ const b = padHit({x:28, y:128+k*98, w:NW-56, h:88}); UI.cards.push(b);
       R(b.x,b.y,b.w,b.h,P.K); R(b.x+1,b.y+1,b.w-2,b.h-2,P.N2); R(b.x+1,b.y+1,b.w-2,2,e.color); R(b.x+2,b.y+4,b.w-4,1,P.N3);
       const icon = sheet('ui.card.'+e.id);
       if(icon) drawCentered(icon, frameOf(icon, now/1000), b.x+26, b.y+b.h/2+2);
@@ -1106,7 +1122,7 @@ function drawOverlays(now){
     txt(T('bestCleared',{w:save.bestWave}), NW/2, 404, F8, P.GO, 'center');
     txt(T('wins')+': '+save.wins, NW/2, 420, F8, P.N5, 'center');
     wrap(T('howTo'), 40).forEach((ln,j)=>txt(ln, NW/2, 446+j*12, F8, P.N4, 'center'));
-    UI.play.y = 490;
+    UI.play.y = 490; UI.play = padHit(UI.play);
     if(ART.ready) goldButton(UI.play, T('play'), true); else goldButton(UI.play, T('loading'), false, F8);
     return;
   }
@@ -1117,7 +1133,7 @@ function drawOverlays(now){
     sTxt(T('chooseBoost').toUpperCase(), NW/2, 168, F8, P.WH, 'center');
     const k = 2, w = 56*k, h = 80*k, gap = 6, x0 = Math.round((NW - (3*w + 2*gap))/2), y = 196, sel = sheet('ui.card_select');
     UI.cards = [];
-    G.cards.forEach((e,i)=>{ const b = {x:x0 + i*(w+gap), y, w, h}; UI.cards.push(b); const sh = arts[i], ta = sh.e.text_area || {};
+    G.cards.forEach((e,i)=>{ const b = padHit({x:x0 + i*(w+gap), y, w, h}); UI.cards.push(b); const sh = arts[i], ta = sh.e.text_area || {};
       const chosen = pressBtn ? inR(pressBtn, b) : (hoverP && inR(hoverP, b));
       if(chosen && sel) drawScaled(sel, 0, b.x - sel.anchor[0]*k, b.y - sel.anchor[1]*k, k);   // overlay at -2,-2 (card px)
       drawScaled(sh, 0, b.x, b.y, k);
@@ -1133,7 +1149,7 @@ function drawOverlays(now){
     if(!rs || !rt){ drawOverlaysBasic(now); return; }
     dim(); pxPanel(40, 190, NW-80, 200);
     sTxt(T('paused').toUpperCase(), NW/2, 214, F16, P.WH, 'center');
-    UI.resume = {x:92, y:252, w:64, h:64}; UI.restart = {x:204, y:252, w:64, h:64};          // 32x32 buttons at 2x
+    UI.resume = padHit({x:92, y:252, w:64, h:64}); UI.restart = padHit({x:204, y:252, w:64, h:64}); // 32x32 art at 2x; hit is already 64
     drawScaled(rs, stateIdx(rs, isPressed(UI.resume) ? 'pressed' : 'normal'), UI.resume.x, UI.resume.y, 2);
     drawScaled(rt, stateIdx(rt, isPressed(UI.restart) ? 'pressed' : 'normal'), UI.restart.x, UI.restart.y, 2);
     txt(T('resume'), UI.resume.x+32, 328, F8, P.N5, 'center'); txt(T('restart'), UI.restart.x+32, 328, F8, P.N5, 'center');
@@ -1154,8 +1170,9 @@ function drawOverlays(now){
     txt(wl, cx + (hs ? 6 : 0), y, F8, P.N5, 'center');
     y += 16; txt(T('bestCleared',{w:save.bestWave}) + (G.newBest?' '+T('newBest'):''), cx, y, F8, P.GO, 'center');
     y += 14; txt(T('wins')+': '+save.wins, cx, y, F8, P.N5, 'center');
-    UI.restart = {x: cx - 100, y: sa[1] + sa[3] - 56, w: 200, h: 44};
-    goldButton(UI.restart, r.win ? T('playAgain') : T('restart'), true);
+    const drawRestart = {x: cx - 100, y: sa[1] + sa[3] - 56, w: 200, h: 44}; // drawn 9-slice stays 44 tall
+    UI.restart = padHit(drawRestart);                                         // hit pad to 48, like the HUD buttons
+    goldButton(drawRestart, r.win ? T('playAgain') : T('restart'), true, null, UI.restart);
   }
 }
 // ---------- Orientation (rotate overlay, DOM so it stays readable at any canvas size) ----------
@@ -1205,6 +1222,10 @@ window.__evo = {
   // CSS-pixel client coords of a logical point / cell / button, for automated tests
   toClient(x,y){ const r = cv.getBoundingClientRect(); return {x: r.left + x*r.width/NW, y: r.top + y*r.height/NH}; },
   get art(){ return {ready: ART.ready, keys: Object.keys(ART.sheets), errors: ART.errors.slice(), manifests: ART.manifests.slice(), pixK, scaleMode, cssW: cv.getBoundingClientRect().width}; },
+  hits(){ const box = b => b && {x:b.x, y:b.y, w:b.w, h:b.h};
+    return { play: box(UI.play), restart: box(UI.restart), resume: box(UI.resume),
+      pause: box(L.btnPause), summon: box(L.btnSummon), enhance: box(L.btnEnh),
+      cards: UI.cards.map(box) }; },
   dragonSheetKey: (t,l,a) => { const s = dragonSheet(t,l,a); return s ? s.key : null; }, rotateEl: () => getComputedStyle(rotEl).display,
   sheetId: slot => { const s = sheet(slot); return s ? s.id : null; }, clutchId: f => { const s = clutchSheet(f); return s ? s.id : null; },
   enemySheetId: (kind, final) => { const s = enemySheet({kind, final}); return s ? s.id : null; },
