@@ -53,32 +53,65 @@ const CONFIG = {
   },
   // Boost cards. {fast} {area} {slow} {support} = tower short names; {unit}/{units}; {base} = base name; {hp} = base HP word.
   boosts: {
-    fastDmg:    { name:'Lance Wind',       desc:'+20% {fast} damage',               color:'#f2b441' },
-    areaRad:    { name:'Third Maw',        desc:'{area} blast radius +25%',         color:'#e0412f' },
-    slowLen:    { name:'Held Tide',        desc:'{slow} slow lasts 50% longer',     color:'#3fc1c9' },
-    atkSpd:     { name:'Wind under Wings', desc:'+10% attack speed (all {units})',  color:'#5fd068' },
-    coinKill:   { name:'Hoard Tithe',      desc:'+1 coin per kill',                 color:'#ffd23f' },
-    heal:       { name:'Warm the Clutch',  desc:'{base} regains 6 {hp}',            color:'#ff7a9a' },
-    summonDisc: { name:'Thin Shells',      desc:'Summons cost 15% less',            color:'#f5efe0' },
-    crit:       { name:'Heartfang',        desc:'+10% crit chance (2x damage)',     color:'#ff9f43' }
+    fastDmg:    { name:'Lance Wind',       desc:'+{v}% {fast} damage',               color:'#f2b441' },
+    areaRad:    { name:'Third Maw',        desc:'{area} blast radius +{v}%',         color:'#e0412f' },
+    slowLen:    { name:'Held Tide',        desc:'{slow} slow lasts {v}% longer',     color:'#3fc1c9' },
+    atkSpd:     { name:'Wind under Wings', desc:'+{v}% attack speed (all {units})',  color:'#5fd068' },
+    coinKill:   { name:'Hoard Tithe',      desc:'+{v} coin per kill',                 color:'#ffd23f' },
+    heal:       { name:'Warm the Clutch',  desc:'{base} regains {v} {hp}',            color:'#ff7a9a' },
+    summonDisc: { name:'Thin Shells',      desc:'Summons cost {v}% less',            color:'#f5efe0' },
+    crit:       { name:'Heartfang',        desc:'+{v}% crit chance (2x damage)',     color:'#ff9f43' }
   },
-  // Balance knobs (not labels). supportSoftCap: if the board already holds this many support
-  // dragons, a summon/merge that rolls support is rerolled to one of the other three types.
-  balance: { supportSoftCap: 3, waveInterval: 7, finalBossDamage: 10, startCoins: 100 },
+  // ---- Balance: every gameplay tunable lives here (no labels) ----
+  balance: {
+    totalWaves: 20, bossEvery: 5, firstWaveDelay: 3, waveInterval: 7,
+    startCoins: 100, warmthMax: 20,
+    summonBase: 10, summonStep: 3,            // summon cost = base + step * summonsSoFar
+    boostBase: 50, boostStep: 35,             // boost cost  = base + step * boostsSoFar
+    maxLevel: 5, dmgPerLevel: 2.4, rangePerLevel: 8,
+    // If the board already holds >= supportSoftCap support dragons, a summon/merge that rolls support rerolls.
+    supportSoftCap: 3,
+    // A merge whose RESULT is this level or higher can only roll support if both inputs were support.
+    supportMergeMinLevel: 4,
+    enemyHpGrowth: 1.155,                     // enemy HP x growth^(wave-1)
+    runnerSpeedPerWave: 0.012,
+    bossSlowResist: 0.5,                      // bosses take this fraction of slow
+    finalBoss: { hpVsWave15Boss: 2.5, speedMult: 1.3, radius: 21 },
+    // Reaching the Clutch with the final boss = immediate loss. Wins require killing it.
+    finalBossLeakLoses: true,
+    waveBonusBase: 4,                         // coins at each wave start (from wave 2): base + wave
+    waves: { baseCount: 5, brutesPerWave: 0.45, bossEscortsBase: 3, bossEscortsPer5: 2,
+             spawnGap: 0.42, bruteGap: 0.7, bossGap: 1.2 },
+    towers: {
+      fast:    { dmg:8,  cd:0.5, range:135, proj:520, pr:3 },
+      area:    { dmg:20, cd:1.5, range:120, proj:280, pr:5, splash:40, splashPerLevel:0.08 },
+      slow:    { dmg:4,  cd:0.9, range:120, proj:380, pr:4, slow:0.35, slowPerLevel:0.06, slowMax:0.7,
+                 slowDur:1.6, slowDurPerLevel:0.12 },
+      support: { aura:0.15 }                  // +15% attack speed per level to the 8 adjacent slots
+    },
+    enemies: {
+      runner: { hp:16,  spd:64, r:8,  dmg:1, coin:3,  coinPerWaves:4 },  // +1 coin every N waves
+      brute:  { hp:62,  spd:30, r:12, dmg:2, coin:6,  coinPerWaves:3 },
+      boss:   { hp:420, spd:23, r:17, dmg:8, coin:40, coinPer5Waves:10 }
+    },
+    boosts: { fastDmg:0.20, areaRad:0.25, slowLen:0.50, atkSpd:0.10, coinKill:1, heal:6, summonDisc:0.15, crit:0.10 }
+  },
+  display: { rotateOverlayMaxShortSide: 600 },  // phones in landscape (touch, short side < this) see the rotate overlay
   text: {
     summon:'SUMMON', boardFull:'BOARD FULL', mergeHint:'merge {units}', boost:'BOOST', coins:'coins',
     howTo:'Drag two identical {units} together to merge', play:'PLAY', chooseBoost:'Choose a boost',
     paused:'Paused', resume:'RESUME', restart:'RESTART', victory:'VICTORY!', defeat:'THE CLUTCH WENT COLD',
     wave:'Wave', nextIn:'Next in', bossIn:'{boss} in', finalWave:'Final wave!',
     bossWave:'{boss} · WAVE', finalBoss:'FINAL {boss}', waveBonus:'wave', crit:'CRIT',
-    allCleared:'All {n} waves cleared', reached:'Reached wave {w} of {n}', time:'Time', kills:'Kills',
+    allCleared:'All {n} waves cleared', reached:'Cleared {c} of {n} waves', bossLeak:'The final {boss} reached the Clutch',
+    rotate:'Rotate your phone', rotateSub:'{title} plays in portrait', time:'Time', kills:'Kills',
     bestWave:'Best wave', wins:'Wins', newBest:'(new!)'
   }
 };
 // Fixed save key: deliberately NOT derived from the title, so renaming keeps saves.
 const SAVE_KEY = 'mergetd-dragon-proto.save.v1';
 function fmt(str, extra){ return str.replace(/\{(\w+)\}/g, (m,k)=> extra && extra[k]!=null ? extra[k] : CONFIG.towers[k] ? CONFIG.towers[k].short :
-  k==='base' ? CONFIG.base.name : k==='hp' ? CONFIG.base.hp : k==='boss' ? CONFIG.enemies.boss.name : (typeof CONFIG[k]==='string' ? CONFIG[k] : m)); }
+  k==='title' ? CONFIG.title : k==='base' ? CONFIG.base.name : k==='hp' ? CONFIG.base.hp : k==='boss' ? CONFIG.enemies.boss.name : (typeof CONFIG[k]==='string' ? CONFIG[k] : m)); }
 const T = (k, extra) => fmt(CONFIG.text[k], extra);
 const TW = id => CONFIG.towers[id];
 document.title = CONFIG.title + ' (prototype)';
@@ -91,33 +124,30 @@ const SHOW_FPS = Q.has('fps');
 
 // ---------- RNG ----------
 let rs = SEED || 1;
+const SEED_FIXED = Q.has('seed');
+function reseed(){ rs = SEED_FIXED ? (SEED || 1) : (((Date.now() ^ (Math.random()*1e9))>>>0) || 1); }
 function rnd(){ rs |= 0; rs = rs + 0x6D2B79F5 | 0; let t = Math.imul(rs ^ rs >>> 15, 1 | rs);
   t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }
 const pick = a => a[(rnd()*a.length)|0];
 
 // ---------- Config ----------
-const LW = 360, COLS = 5, ROWS = 3, CELL = 56, MAX_LVL = 5, TOTAL_WAVES = 20;
-const WAVE_INTERVAL = CONFIG.balance.waveInterval, FIRST_WAVE_DELAY = 3;
-const CASTLE_MAX = 20, START_COINS = CONFIG.balance.startCoins;
-const SUMMON_BASE = 10, SUMMON_STEP = 4;
-const ENH_BASE = 50, ENH_STEP = 35;
+const B = CONFIG.balance;
+const LW = 360, COLS = 5, ROWS = 3, CELL = 56, MAX_LVL = B.maxLevel, TOTAL_WAVES = B.totalWaves;
+const WAVE_INTERVAL = B.waveInterval, FIRST_WAVE_DELAY = B.firstWaveDelay;
+const CASTLE_MAX = B.warmthMax, START_COINS = B.startCoins;
+const SUMMON_BASE = B.summonBase, SUMMON_STEP = B.summonStep;
+const ENH_BASE = B.boostBase, ENH_STEP = B.boostStep;
 const LOADOUT = ['fast','area','slow','support'];
 // gameplay numbers only (names/colors live in CONFIG.towers)
-const STATS = {
-  fast:{dmg:8,  cd:0.5, range:135, proj:520, pr:3},
-  area:{dmg:20, cd:1.5, range:120, proj:280, pr:5, splash:40},
-  slow: {dmg:4, cd:0.9, range:120, proj:380, pr:4, slow:0.35, slowDur:1.6},
-  support:{aura:0.15}
-};
+const STATS = B.towers;
 const LVL_COLOR = ['#fff','#ffffff','#7dff8a','#57b8ff','#d27dff','#ffd23f'];
-const dmgMult = L => Math.pow(2.4, L-1);
-const ENEMY = {
-  runner:{hp:16, spd:64, r:8,  dmg:1, coin:3},
-  brute: {hp:62, spd:30, r:12, dmg:2, coin:6},
-  boss:  {hp:420,spd:23, r:17, dmg:8, coin:40}
-};
-const hpScale = w => Math.pow(1.155, w-1);
+const dmgMult = L => Math.pow(B.dmgPerLevel, L-1);
+const ENEMY = B.enemies;
+const hpScale = w => Math.pow(B.enemyHpGrowth, w-1);
+const finalBossHp = () => ENEMY.boss.hp * hpScale(15) * B.finalBoss.hpVsWave15Boss;
+const boostVal = id => { const v = B.boosts[id]; return (id==='coinKill'||id==='heal') ? v : Math.round(v*100); };
 const ENHANCEMENTS = Object.keys(CONFIG.boosts).map(id => ({id, ...CONFIG.boosts[id]}));
+const cardDesc = e => fmt(e.desc, {v: boostVal(e.id)});
 
 // ---------- Save ----------
 function loadSave(){ try{ const s = JSON.parse(localStorage.getItem(SAVE_KEY)||'{}');
@@ -175,21 +205,27 @@ const inR = (p,b) => b && p.x>=b.x && p.x<=b.x+b.w && p.y>=b.y && p.y<=b.y+b.h;
 // ---------- Game state ----------
 let G;
 function newGame(mode){
+  reseed(); // L4: with ?seed=N every new match/restart replays the same RNG stream
   G = { mode: mode||'play', time:0, wave:0, waveTimer:FIRST_WAVE_DELAY, queue:[], spawnT:0,
     enemies:[], dragons:new Array(COLS*ROWS).fill(null), projs:[], fx:[], texts:[],
     coins:START_COINS, castle:CASTLE_MAX, summons:0, enhBought:0, kills:0,
     buffs:{fastDmg:0,areaRad:0,slowLen:0,atkSpd:0,coinKill:0,summonDisc:0,crit:0},
-    bossLeaks:[], cards:null, result:null, banner:null, shake:0, newBest:false };
+    bossLeaks:[], waveLeft:new Array(TOTAL_WAVES+2).fill(0), cleared:0, finalBossKilled:false, lossReason:null, sel:null, cards:null, result:null, banner:null, shake:0, newBest:false };
   drag = null;
 }
-const summonCost = () => Math.round((SUMMON_BASE + SUMMON_STEP*G.summons) * Math.pow(0.85, G.buffs.summonDisc));
+const summonCost = () => Math.round((SUMMON_BASE + SUMMON_STEP*G.summons) * Math.pow(1 - B.boosts.summonDisc, G.buffs.summonDisc));
 const enhCost = () => ENH_BASE + ENH_STEP*G.enhBought;
 const freeCells = () => { const f=[]; G.dragons.forEach((h,i)=>{ if(!h) f.push(i); }); return f; };
-function rollType(){
+// resultLvl/inputType are given for merges only. Support is rerolled to one of the other three types when
+// (a) the board already holds >= supportSoftCap support dragons, or (b) a merge result is >= supportMergeMinLevel
+// and the two inputs were not support.
+function rollType(resultLvl, inputType){
   const t = pick(LOADOUT);
   if(t !== 'support') return t;
   const n = G.dragons.reduce((k,h)=> k + (h && h.type==='support' ? 1 : 0), 0);
-  return n >= CONFIG.balance.supportSoftCap ? pick(LOADOUT.filter(x=>x!=='support')) : t;
+  const blockedByCap = n >= B.supportSoftCap;
+  const blockedByLevel = resultLvl >= B.supportMergeMinLevel && inputType !== 'support';
+  return (blockedByCap || blockedByLevel) ? pick(LOADOUT.filter(x=>x!=='support')) : t;
 }
 const mkDragon = (type,lvl) => ({type, lvl, cd: rnd()*0.3, pop:1, aim:0});
 
@@ -198,7 +234,7 @@ function summon(){
   const cost = summonCost(), free = freeCells();
   if(G.coins < cost || !free.length) return false;
   G.coins -= cost; G.summons++;
-  const i = pick(free); G.dragons[i] = mkDragon(rollType(), 1);
+  const i = pick(free); G.dragons[i] = mkDragon(rollType(1, null), 1);
   const c = cellCenter(i); ring(c.x,c.y,'#fff',30);
   return true;
 }
@@ -209,7 +245,7 @@ function dropDragon(from, to){
   if(!a) return 'none';
   if(canMerge(a,b)){
     G.dragons[from] = null; G.dragons[to] = null; // count the board without the merging pair
-    G.dragons[to] = mkDragon(rollType(), a.lvl+1);
+    G.dragons[to] = mkDragon(rollType(a.lvl+1, a.type), a.lvl+1);
     const c = cellCenter(to); ring(c.x,c.y,LVL_COLOR[a.lvl+1],44); ring(c.x,c.y,'#fff',28);
     floatText(c.x, c.y-24, CONFIG.levels[a.lvl+1]+' '+TW(G.dragons[to].type).name, LVL_COLOR[a.lvl+1]);
     return 'merge';
@@ -221,7 +257,7 @@ function openEnhance(){
   if(G.mode!=='play') return false;
   const cost = enhCost(); if(G.coins < cost) return false;
   G.coins -= cost; G.enhBought++;
-  const pool = ENHANCEMENTS.slice(); const cards=[];
+  const pool = ENHANCEMENTS.filter(e => !(e.id==='heal' && G.castle >= CASTLE_MAX)); const cards=[]; // L2
   for(let k=0;k<3;k++){ cards.push(pool.splice((rnd()*pool.length)|0,1)[0]); }
   G.cards = cards; G.mode = 'enhance'; drag = null;
   return true;
@@ -229,43 +265,46 @@ function openEnhance(){
 function chooseCard(k){
   if(G.mode!=='enhance' || !G.cards[k]) return;
   const e = G.cards[k];
-  if(e.id==='heal'){ G.castle = Math.min(CASTLE_MAX, G.castle+6); }
+  if(e.id==='heal'){ G.castle = Math.min(CASTLE_MAX, G.castle+B.boosts.heal); }
   else G.buffs[e.id]++;
-  G.banner = {text:e.name+'!', sub:fmt(e.desc), t:1.6, c:e.color};
+  G.banner = {text:e.name+'!', sub:cardDesc(e), t:1.6, c:e.color};
   G.cards = null; G.mode = 'play';
 }
 
 function startWave(w){
   G.wave = w; G.waveTimer = WAVE_INTERVAL;
-  if(w>1){ const bonus = 4 + w; G.coins += bonus; floatText(L.btnCoins.x+46, L.btnCoins.y-8, '+'+bonus+' '+T('waveBonus'), '#ffd23f'); }
-  const boss = w%5===0;
+  if(w>1){ const bonus = B.waveBonusBase + w; G.coins += bonus; floatText(L.btnCoins.x+46, L.btnCoins.y-8, '+'+bonus+' '+T('waveBonus'), '#ffd23f'); }
+  const boss = w%B.bossEvery===0, W = B.waves;
   const q = [];
-  const n = boss ? 3 + (w/5|0)*2 : 5 + w;
-  const brutes = boss ? (w/5|0) : Math.floor(w*0.45);
+  const n = boss ? W.bossEscortsBase + (w/B.bossEvery|0)*W.bossEscortsPer5 : W.baseCount + w;
+  const brutes = boss ? (w/B.bossEvery|0) : Math.floor(w*W.brutesPerWave);
   for(let k=0;k<n;k++) q.push(k < n-brutes ? 'runner' : 'brute');
   for(let k=q.length-1;k>0;k--){ const j=(rnd()*(k+1))|0; [q[k],q[j]]=[q[j],q[k]]; }
   if(boss) q.push('boss');
-  G.queue = q; G.spawnT = 0;
+  // append (never replace): a wave still spawning when the next starts keeps its remaining enemies
+  for(const k of q) G.queue.push({k, w}); if(G.queue.length===q.length) G.spawnT = 0; G.waveLeft[w] = q.length;
   G.banner = boss ? {text: (w===TOTAL_WAVES ? T('finalBoss') : T('bossWave')+' '+w).toUpperCase(), sub:'', t:2, c:'#ff4d6d'}
                   : {text:T('wave')+' '+w, sub:'', t:1.1, c:'#fff'};
-  if(w > save.bestWave){ save.bestWave = w; G.newBest = true; writeSave(); }
 }
-function spawnEnemy(kind){
-  const d = ENEMY[kind], w = G.wave;
-  let hp = d.hp * hpScale(w);
-  if(kind==='boss' && w===TOTAL_WAVES) hp *= 2.2;
-  G.enemies.push({kind, hp, max:hp, spd:d.spd*(1+ (kind==='runner'? w*0.012:0)) * (kind==='boss' && w===TOTAL_WAVES ? 1.3 : 1), r: kind==='boss'&&w===TOTAL_WAVES ? 21 : d.r,
+// L1: best wave = highest wave whose enemies are all resolved (killed, or leaked while the Clutch survived)
+function checkCleared(){
+  while(G.cleared < G.wave && G.waveLeft[G.cleared+1] === 0){ G.cleared++;
+    if(G.cleared > save.bestWave){ save.bestWave = G.cleared; G.newBest = true; writeSave(); } }
+}
+function spawnEnemy(kind, waveNo){
+  const d = ENEMY[kind], w = waveNo || G.wave;
+  const fin = kind==='boss' && w===TOTAL_WAVES;
+  const hp = fin ? finalBossHp() : d.hp * hpScale(w);
+  G.enemies.push({kind, hp, max:hp, spd:d.spd*(1+ (kind==='runner'? w*B.runnerSpeedPerWave:0)) * (fin ? B.finalBoss.speedMult : 1), r: fin ? B.finalBoss.radius : d.r,
     dist: -10 - rnd()*8, slowT:0, slowF:0, x:0, y:0, dead:false, hitT:0,
     wave: w, final: kind==='boss' && w===TOTAL_WAVES});
 }
 function endGame(win){
   if(G.mode==='over') return;
   G.mode = 'over'; drag = null;
-  const reached = win ? TOTAL_WAVES : G.wave;
-  if(reached > save.bestWave){ save.bestWave = reached; G.newBest = true; }
-  if(win) save.wins++;
+  if(win){ G.cleared = TOTAL_WAVES; if(TOTAL_WAVES > save.bestWave){ save.bestWave = TOTAL_WAVES; G.newBest = true; } save.wins++; }
   writeSave();
-  G.result = {win, wave: reached, time: G.time};
+  G.result = {win, wave: G.wave, cleared: G.cleared, time: G.time, reason: G.lossReason};
 }
 
 // ---------- FX ----------
@@ -286,8 +325,9 @@ function supportBonus(i){
 function damage(e, amt, crit){
   if(e.dead) return;
   e.hp -= amt; e.hitT = 0.08;
-  if(e.hp <= 0){ e.dead = true; G.kills++;
-    const base = ENEMY[e.kind].coin + (e.kind==='runner' ? (G.wave/4|0) : e.kind==='brute' ? (G.wave/3|0) : (10*(G.wave/5|0)));
+  if(e.hp <= 0){ e.dead = true; G.kills++; G.waveLeft[e.wave]--; if(e.final) G.finalBossKilled = true;
+    const D = ENEMY[e.kind];
+    const base = D.coin + (e.kind==='boss' ? D.coinPer5Waves*(G.wave/5|0) : (G.wave/D.coinPerWaves|0));
     const gain = base + G.buffs.coinKill; G.coins += gain;
     floatText(e.x, e.y-10, '+'+gain, '#ffd23f');
     boom(e.x,e.y,CONFIG.enemies[e.kind].color, e.r+8);
@@ -299,24 +339,28 @@ function step(dt){
   if(G.shake>0) G.shake = Math.max(0, G.shake - dt*3);
   // waves
   if(G.wave < TOTAL_WAVES){ G.waveTimer -= dt; if(G.waveTimer <= 0) startWave(G.wave+1); }
-  if(G.queue.length){ G.spawnT -= dt; if(G.spawnT <= 0){ const k = G.queue.shift(); spawnEnemy(k);
-      G.spawnT = k==='brute' ? 0.7 : 0.42; if(G.queue.length && G.queue[0]==='boss') G.spawnT = 1.2; } }
+  if(G.queue.length){ G.spawnT -= dt; if(G.spawnT <= 0){ const it = G.queue.shift(), k = it.k || it; spawnEnemy(k, it.w);
+      G.spawnT = k==='brute' ? B.waves.bruteGap : B.waves.spawnGap; if(G.queue.length && (G.queue[0].k || G.queue[0])==='boss') G.spawnT = B.waves.bossGap; } }
   // enemies
   for(const e of G.enemies){
     if(e.dead) continue;
     let s = e.spd;
-    if(e.slowT>0){ e.slowT -= dt; s *= 1 - e.slowF * (e.kind==='boss'?0.5:1); }
+    if(e.slowT>0){ e.slowT -= dt; s *= 1 - e.slowF * (e.kind==='boss'?B.bossSlowResist:1); }
     if(e.hitT>0) e.hitT -= dt;
     e.dist += s*dt; posAt(e.dist, e);
     if(e.dist >= pathLen){
-      e.dead = true; const d = e.final ? CONFIG.balance.finalBossDamage : ENEMY[e.kind].dmg;
+      e.dead = true;
       if(e.kind==='boss') G.bossLeaks.push(e.wave); // which boss wave leaked
+      if(e.final && B.finalBossLeakLoses){ // H1: final boss reaching the Clutch is a loss, never a win
+        G.shake = 1; G.lossReason = 'finalBoss'; G.castle = 0; endGame(false); return; }
+      const d = ENEMY[e.kind].dmg;
       G.castle -= d; G.shake = 1; floatText(LW/2, L.castleY-30, '-'+d, '#ff4d6d');
-      if(G.castle <= 0){ G.castle = 0; endGame(false); return; }
+      if(G.castle <= 0){ G.castle = 0; G.lossReason = 'warmth'; endGame(false); return; }
+      G.waveLeft[e.wave]--;
     }
   }
   // dragons
-  const atkBase = 1 + 0.10*G.buffs.atkSpd;
+  const atkBase = 1 + B.boosts.atkSpd*G.buffs.atkSpd;
   for(let i=0;i<G.dragons.length;i++){
     const h = G.dragons[i]; if(!h) continue;
     if(h.pop>0) h.pop = Math.max(0, h.pop - dt*4);
@@ -325,7 +369,7 @@ function step(dt){
     const H = STATS[h.type];
     h.cd -= dt * (atkBase + supportBonus(i));
     if(h.cd > 0) continue;
-    const c = cellCenter(i), range = H.range + 8*(h.lvl-1), r2 = range*range;
+    const c = cellCenter(i), range = H.range + B.rangePerLevel*(h.lvl-1), r2 = range*range;
     let best = null, bd = -1;
     for(const e of G.enemies){ if(e.dead || e.dist < 0) continue;
       const dx=e.x-c.x, dy=e.y-c.y; if(dx*dx+dy*dy <= r2){
@@ -334,8 +378,8 @@ function step(dt){
     if(!best){ h.cd = 0.05; continue; }
     h.cd = H.cd; h.aim = Math.atan2(best.y-c.y, best.x-c.x);
     let dmg = H.dmg * dmgMult(h.lvl);
-    if(h.type==='fast') dmg *= 1 + 0.2*G.buffs.fastDmg;
-    const crit = rnd() < 0.1*G.buffs.crit; if(crit) dmg *= 2;
+    if(h.type==='fast') dmg *= 1 + B.boosts.fastDmg*G.buffs.fastDmg;
+    const crit = rnd() < B.boosts.crit*G.buffs.crit; if(crit) dmg *= 2;
     G.projs.push({type:h.type, lvl:h.lvl, x:c.x, y:c.y, tgt:best, tx:best.x, ty:best.y, spd:H.proj, dmg, crit});
   }
   // projectiles
@@ -346,15 +390,15 @@ function step(dt){
     if(d <= mv + 4){
       p.done = true; p.x = p.tx; p.y = p.ty;
       if(p.type==='area'){
-        const R = STATS.area.splash * (1 + 0.25*G.buffs.areaRad) * (1 + 0.08*(p.lvl-1)), R2 = R*R;
+        const R = STATS.area.splash * (1 + B.boosts.areaRad*G.buffs.areaRad) * (1 + STATS.area.splashPerLevel*(p.lvl-1)), R2 = R*R;
         for(const e of G.enemies){ if(e.dead) continue; const ex=e.x-p.x, ey=e.y-p.y;
           if(ex*ex+ey*ey <= R2 + e.r*e.r) damage(e, p.dmg, p.crit); }
         boom(p.x,p.y,'#ffb36b',R);
       } else if(p.tgt && !p.tgt.dead){
         damage(p.tgt, p.dmg, p.crit);
         if(p.type==='slow'){ const H=STATS.slow;
-          p.tgt.slowT = Math.max(p.tgt.slowT, H.slowDur*(1+0.5*G.buffs.slowLen)*(1+0.12*(p.lvl-1)));
-          p.tgt.slowF = Math.max(p.tgt.slowF, Math.min(0.7, H.slow + 0.06*(p.lvl-1))); }
+          p.tgt.slowT = Math.max(p.tgt.slowT, H.slowDur*(1+B.boosts.slowLen*G.buffs.slowLen)*(1+H.slowDurPerLevel*(p.lvl-1)));
+          p.tgt.slowF = Math.max(p.tgt.slowF, Math.min(H.slowMax, H.slow + H.slowPerLevel*(p.lvl-1))); }
       }
     } else { p.x += dx/d*mv; p.y += dy/d*mv; }
   }
@@ -362,16 +406,21 @@ function step(dt){
   compact(G.enemies, e=>!e.dead); compact(G.projs, p=>!p.done);
   for(const f of G.fx) f.t += dt; compact(G.fx, f=>f.t<f.d);
   for(const t of G.texts){ t.t += dt; t.y -= 26*dt; } compact(G.texts, t=>t.t<t.d);
-  // win
-  if(G.wave===TOTAL_WAVES && !G.queue.length && !G.enemies.length) endGame(true);
+  checkCleared();
+  // win: wave 20 fully resolved AND the final boss was actually killed (H1)
+  if(G.wave===TOTAL_WAVES && !G.queue.length && !G.enemies.length){
+    if(G.finalBossKilled || !B.finalBossLeakLoses) endGame(true); else { G.lossReason = 'finalBoss'; endGame(false); } }
 }
 function compact(a, keep){ let j=0; for(let i=0;i<a.length;i++){ if(keep(a[i])) a[j++]=a[i]; } a.length=j; }
 
 // ---------- Input ----------
 let drag = null, pressBtn = null;
+const SEL_MS = 1500; // range ring display time (ms)
 function toLogical(cx, cy){ return {x:(cx - offX)/scale, y:(cy - offY)/scale}; }
 cv.addEventListener('pointerdown', e=>{
   e.preventDefault();
+  if(rotateBlock) return;
+  tryLockPortrait();
   if(drag || pressBtn) return; // single pointer
   try{ cv.setPointerCapture(e.pointerId); }catch(_){}
   const p = toLogical(e.clientX, e.clientY);
@@ -390,7 +439,7 @@ function endPointer(e, cancel){
   if(drag && e.pointerId===drag.id){
     const p = toLogical(e.clientX, e.clientY);
     if(!cancel && drag.moved && G.mode==='play') dropDragon(drag.from, cellAt(p.x,p.y));
-    else if(!drag.moved) { const c = cellCenter(drag.from); G.sel = {i:drag.from, t:1.5}; }
+    else if(!drag.moved) { G.sel = {i:drag.from, until: performance.now() + SEL_MS}; }
     drag = null; return;
   }
   if(pressBtn && e.pointerId===pressBtn.id){ const p = toLogical(e.clientX, e.clientY); pressBtn = null;
@@ -409,6 +458,7 @@ window.addEventListener('keydown', e=>{
 function togglePause(){ if(G.mode==='play') G.mode='paused'; else if(G.mode==='paused') G.mode='play'; }
 function tap(p){
   const m = G.mode;
+  if(rotateBlock) return;
   if(m==='menu'){ if(inR(p,UI.play)) newGame('play'); return; }
   if(m==='over'){ if(inR(p,UI.restart)) newGame('play'); return; }
   if(m==='paused'){ if(inR(p,UI.resume)) G.mode='play'; else if(inR(p,UI.restart)) newGame('play'); return; }
@@ -503,9 +553,9 @@ function draw(now){
     rr(x0, y0, x1-x0, y1-y0, 12); ctx.stroke(); ctx.globalAlpha=1; }
   for(let i=0;i<G.dragons.length;i++){ const h=G.dragons[i]; if(!h) continue; const c=cellCenter(i);
     drawDragon(h, c.x, c.y, (drag && drag.moved && drag.from===i) ? 0.3 : 1, i); }
-  if(G.sel){ G.sel.t -= 1/60; const h = G.dragons[G.sel.i];
-    if(h && h.type!=='support' && G.sel.t>0){ const c=cellCenter(G.sel.i); ctx.strokeStyle='rgba(255,255,255,0.35)'; ctx.lineWidth=1.5;
-      ctx.beginPath(); ctx.arc(c.x,c.y,STATS[h.type].range+8*(h.lvl-1),0,7); ctx.stroke(); } else G.sel=null; }
+  if(G.sel){ const h = G.dragons[G.sel.i], left = (G.sel.until - now)/SEL_MS; // L5: fades by wall-clock time
+    if(h && h.type!=='support' && left>0){ const c=cellCenter(G.sel.i); ctx.strokeStyle='rgba(255,255,255,'+(0.5*Math.min(1,left*2)).toFixed(3)+')'; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.arc(c.x,c.y,STATS[h.type].range+B.rangePerLevel*(h.lvl-1),0,7); ctx.stroke(); } else G.sel=null; }
   // enemies
   for(const e of G.enemies){ if(e.dist<-4) continue;
     const d = ENEMY[e.kind];
@@ -540,9 +590,9 @@ function drawHUD(now){
   const w = Math.max(G.wave,0);
   txt(T('wave')+' '+w+'/'+TOTAL_WAVES, 14, 20, 17, '#fff','left');
   let next = '';
-  if(G.mode!=='menu' && G.wave<TOTAL_WAVES){ const nw = G.wave+1; next = (nw%5===0? T('bossIn') : T('nextIn'))+' '+Math.ceil(G.waveTimer)+'s'; }
+  if(G.mode!=='menu' && G.wave<TOTAL_WAVES){ const nw = G.wave+1; next = (nw%B.bossEvery===0? T('bossIn') : T('nextIn'))+' '+Math.ceil(G.waveTimer)+'s'; }
   else if(G.wave===TOTAL_WAVES) next = T('finalWave');
-  txt(next, 14, 44, 12, (G.wave+1)%5===0 && G.wave<TOTAL_WAVES ? '#ff8fa3':'#9aa6c0','left','600');
+  txt(next, 14, 44, 12, (G.wave+1)%B.bossEvery===0 && G.wave<TOTAL_WAVES ? '#ff8fa3':'#9aa6c0','left','600');
   // castle hp
   const bx=140, by=14, bw=160, bh=14;
   txt(CONFIG.base.name+' '+CONFIG.base.hp.toLowerCase()+' '+Math.ceil(G.castle)+'/'+CASTLE_MAX, bx+bw/2, by+30, 12, '#cfd6e6','center','600');
@@ -569,6 +619,25 @@ function drawHUD(now){
     ctx.globalAlpha = 1; }
 }
 function panel(y,h){ ctx.fillStyle='rgba(8,10,16,0.78)'; ctx.fillRect(0,0,LW,LH); ctx.fillStyle='#1d2536'; rr(20,y,LW-40,h,18); ctx.fill(); }
+function drawRotate(){
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.fillStyle = '#10151f'; ctx.fillRect(0,0,vw,vh);
+  const cx = vw/2, cy = vh/2 - 20;
+  ctx.save(); ctx.translate(cx, cy - 20); ctx.rotate(-Math.PI/2 * (0.5 + 0.5*Math.sin(performance.now()*0.003)));
+  ctx.strokeStyle = '#cfd6e6'; ctx.lineWidth = 3; rr(-18,-32,36,64,7); ctx.stroke(); ctx.restore();
+  txt(T('rotate'), cx, cy + 40, 22, '#fff');
+  txt(T('rotateSub'), cx, cy + 68, 14, '#9aa6c0','center','600');
+}
+function isPhoneLandscape(){
+  return vw > vh && Math.min(vw, vh) < CONFIG.display.rotateOverlayMaxShortSide &&
+    ((window.matchMedia && matchMedia('(pointer: coarse)').matches) || navigator.maxTouchPoints > 0);
+}
+let rotateBlock = false;
+function updateOrientation(){
+  rotateBlock = isPhoneLandscape();
+  if(rotateBlock){ if(G && G.mode==='play') G.mode = 'paused'; drag = null; pressBtn = null; }
+}
+function tryLockPortrait(){ try{ if(screen.orientation && screen.orientation.lock) screen.orientation.lock('portrait').catch(()=>{}); }catch(_){} }
 function drawOverlays(now){
   const m = G.mode, mid = LH/2;
   if(m==='menu'){
@@ -588,7 +657,7 @@ function drawOverlays(now){
       rr(b.x,b.y,b.w,b.h,14); ctx.fillStyle='#2a3550'; ctx.fill(); ctx.strokeStyle=e.color; ctx.lineWidth=2.5; ctx.stroke();
       ctx.fillStyle=e.color; ctx.beginPath(); ctx.arc(b.x+34,b.y+b.h/2,16,0,7); ctx.fill();
       txt(String(k+1), b.x+34, b.y+b.h/2, 16, '#10151f');
-      txt(e.name, b.x+62, b.y+32, 18, '#fff','left'); txt(fmt(e.desc), b.x+62, b.y+60, 13, '#cfd6e6','left','600'); });
+      txt(e.name, b.x+62, b.y+32, 18, '#fff','left'); txt(cardDesc(e), b.x+62, b.y+60, 13, '#cfd6e6','left','600'); });
   } else if(m==='paused'){
     panel(mid-120, 240); txt(CONFIG.text.paused, LW/2, mid-80, 28, '#fff');
     UI.resume.y = mid-40; button(UI.resume, CONFIG.text.resume, '', true, '#27ae60');
@@ -596,7 +665,7 @@ function drawOverlays(now){
   } else if(m==='over'){
     const r = G.result; panel(mid-170, 340);
     txt(r.win ? T('victory') : T('defeat'), LW/2, mid-125, r.win?34:24, r.win ? '#ffd23f' : '#ff4d6d');
-    txt(r.win ? T('allCleared',{n:TOTAL_WAVES}) : T('reached',{w:r.wave,n:TOTAL_WAVES}), LW/2, mid-85, 16, '#fff','center','600');
+    txt(r.win ? T('allCleared',{n:TOTAL_WAVES}) : (r.reason==='finalBoss' ? T('bossLeak') : T('reached',{c:r.cleared,n:TOTAL_WAVES})), LW/2, mid-85, r.reason==='finalBoss'?14:16, '#fff','center','600');
     txt(T('time')+' '+fmtTime(r.time)+'   '+T('kills')+' '+G.kills, LW/2, mid-58, 13, '#9aa6c0','center','600');
     txt(T('bestWave')+': '+save.bestWave + (G.newBest?'  '+T('newBest'):''), LW/2, mid-20, 18, '#ffd23f');
     txt(T('wins')+': '+save.wins, LW/2, mid+8, 16, '#cfd6e6');
@@ -618,13 +687,13 @@ function frame(now){
     acc += dt*SPEED; let n=0;
     while(acc >= FIXED && n < 2000){ step(FIXED); acc -= FIXED; n++; if(G.mode!=='play') { acc=0; break; } }
   } else acc = 0;
-  draw(now);
+  if(rotateBlock) drawRotate(); else draw(now);
   workTimes.push(performance.now()-t0); if(workTimes.length>600) workTimes.shift();
   requestAnimationFrame(frame);
 }
-window.addEventListener('resize', resize);
-window.addEventListener('orientationchange', ()=>setTimeout(resize,200));
-resize(); newGame('menu');
+window.addEventListener('resize', ()=>{ resize(); updateOrientation(); });
+window.addEventListener('orientationchange', ()=>setTimeout(()=>{ resize(); updateOrientation(); },200));
+resize(); newGame('menu'); updateOrientation();
 requestAnimationFrame(t=>{ last=t; frame(t); });
 
 // ---------- Test/debug hook (read-only helpers) ----------
@@ -636,7 +705,9 @@ window.__evo = {
   cell(i){ const c = cellCenter(i); return this.toClient(c.x,c.y); },
   btn(name){ const b = L[name] || (name.startsWith('card')? UI.cards[+name.slice(4)] : UI[name]);
     return this.toClient(b.x+b.w/2, b.y+b.h/2); },
-  summonCost, enhCost, summon, dropDragon
+  summonCost, enhCost, summon, dropDragon, openEnhance, chooseCard, rollType, finalBossHp, step, startWave, newGame,
+  bossHp: w => ENEMY.boss.hp * hpScale(w),
+  get rotateBlock(){ return rotateBlock; }, rng: () => rnd()
 };
 })();
 </script>
