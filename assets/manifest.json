@@ -1,0 +1,2209 @@
+{
+ "meta": {
+  "project": "Wyrmwake TD",
+  "art_version": "v1",
+  "grid": 48,
+  "palette": [
+   "be4a2f",
+   "d77643",
+   "ead4aa",
+   "e4a672",
+   "b86f50",
+   "733e39",
+   "3e2731",
+   "a22633",
+   "e43b44",
+   "f77622",
+   "feae34",
+   "fee761",
+   "63c74d",
+   "3e8948",
+   "265c42",
+   "193c3e",
+   "124e89",
+   "0099db",
+   "2ce8f5",
+   "ffffff",
+   "c0cbdc",
+   "8b9bb4",
+   "5a6988",
+   "3a4466",
+   "262b44",
+   "181425",
+   "ff0044",
+   "68386c",
+   "b55088",
+   "f6757a",
+   "e8b796",
+   "c28569",
+   "b4f2e4",
+   "6fd6c8",
+   "2f9e9e",
+   "1d6a74"
+  ],
+  "outline": "181425",
+  "pixel_rules": "alpha 0 or 255 only; palette colours only",
+  "layout": "horizontal strip, equal frame size, frame i at x=i*frame_w",
+  "anchor_note": "anchor = [x,y] pixel inside a frame; sprites: bottom-centre (feet on last row); tiles: top-left; fx: centre unless stated; HUD/screens: top-left",
+  "facing": "dragons face right (Zmei is front-facing); enemies face right - flip horizontally when moving left",
+  "batches": {
+   "1": "dragons, enemies, tiles, clutch (complete)",
+   "2": "fx/projectiles, HUD, enhancement cards, win/lose screens, app icon (complete)"
+  },
+  "projectiles": "projectile sheets face right (0 rad); rotate by atan2(dy,dx) about the listed anchor"
+ },
+ "sheets": [
+  {
+   "id": "jaculus_lv1_idle",
+   "path": "sheets/dragons/jaculus_lv1_idle.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 5,
+   "loop": true,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "jaculus",
+   "level": 1,
+   "anim": "idle"
+  },
+  {
+   "id": "jaculus_lv1_attack",
+   "path": "sheets/dragons/jaculus_lv1_attack.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 10,
+   "loop": false,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "jaculus",
+   "level": 1,
+   "anim": "attack",
+   "hit_frame": 1
+  },
+  {
+   "id": "jaculus_lv2_idle",
+   "path": "sheets/dragons/jaculus_lv2_idle.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 5,
+   "loop": true,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "jaculus",
+   "level": 2,
+   "anim": "idle"
+  },
+  {
+   "id": "jaculus_lv2_attack",
+   "path": "sheets/dragons/jaculus_lv2_attack.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 10,
+   "loop": false,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "jaculus",
+   "level": 2,
+   "anim": "attack",
+   "hit_frame": 1
+  },
+  {
+   "id": "jaculus_lv3_idle",
+   "path": "sheets/dragons/jaculus_lv3_idle.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 5,
+   "loop": true,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "jaculus",
+   "level": 3,
+   "anim": "idle"
+  },
+  {
+   "id": "jaculus_lv3_attack",
+   "path": "sheets/dragons/jaculus_lv3_attack.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 10,
+   "loop": false,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "jaculus",
+   "level": 3,
+   "anim": "attack",
+   "hit_frame": 1
+  },
+  {
+   "id": "jaculus_lv4_idle",
+   "path": "sheets/dragons/jaculus_lv4_idle.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 5,
+   "loop": true,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "jaculus",
+   "level": 4,
+   "anim": "idle"
+  },
+  {
+   "id": "jaculus_lv4_attack",
+   "path": "sheets/dragons/jaculus_lv4_attack.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 10,
+   "loop": false,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "jaculus",
+   "level": 4,
+   "anim": "attack",
+   "hit_frame": 1
+  },
+  {
+   "id": "jaculus_lv5_idle",
+   "path": "sheets/dragons/jaculus_lv5_idle.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 5,
+   "loop": true,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "jaculus",
+   "level": 5,
+   "anim": "idle"
+  },
+  {
+   "id": "jaculus_lv5_attack",
+   "path": "sheets/dragons/jaculus_lv5_attack.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 10,
+   "loop": false,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "jaculus",
+   "level": 5,
+   "anim": "attack",
+   "hit_frame": 1
+  },
+  {
+   "id": "zmei_lv1_idle",
+   "path": "sheets/dragons/zmei_lv1_idle.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 5,
+   "loop": true,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "zmei",
+   "level": 1,
+   "anim": "idle"
+  },
+  {
+   "id": "zmei_lv1_attack",
+   "path": "sheets/dragons/zmei_lv1_attack.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 10,
+   "loop": false,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "zmei",
+   "level": 1,
+   "anim": "attack",
+   "hit_frame": 1
+  },
+  {
+   "id": "zmei_lv2_idle",
+   "path": "sheets/dragons/zmei_lv2_idle.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 5,
+   "loop": true,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "zmei",
+   "level": 2,
+   "anim": "idle"
+  },
+  {
+   "id": "zmei_lv2_attack",
+   "path": "sheets/dragons/zmei_lv2_attack.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 10,
+   "loop": false,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "zmei",
+   "level": 2,
+   "anim": "attack",
+   "hit_frame": 1
+  },
+  {
+   "id": "zmei_lv3_idle",
+   "path": "sheets/dragons/zmei_lv3_idle.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 5,
+   "loop": true,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "zmei",
+   "level": 3,
+   "anim": "idle"
+  },
+  {
+   "id": "zmei_lv3_attack",
+   "path": "sheets/dragons/zmei_lv3_attack.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 10,
+   "loop": false,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "zmei",
+   "level": 3,
+   "anim": "attack",
+   "hit_frame": 1
+  },
+  {
+   "id": "zmei_lv4_idle",
+   "path": "sheets/dragons/zmei_lv4_idle.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 5,
+   "loop": true,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "zmei",
+   "level": 4,
+   "anim": "idle"
+  },
+  {
+   "id": "zmei_lv4_attack",
+   "path": "sheets/dragons/zmei_lv4_attack.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 10,
+   "loop": false,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "zmei",
+   "level": 4,
+   "anim": "attack",
+   "hit_frame": 1
+  },
+  {
+   "id": "zmei_lv5_idle",
+   "path": "sheets/dragons/zmei_lv5_idle.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 5,
+   "loop": true,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "zmei",
+   "level": 5,
+   "anim": "idle"
+  },
+  {
+   "id": "zmei_lv5_attack",
+   "path": "sheets/dragons/zmei_lv5_attack.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 10,
+   "loop": false,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "zmei",
+   "level": 5,
+   "anim": "attack",
+   "hit_frame": 1
+  },
+  {
+   "id": "kanju_lv1_idle",
+   "path": "sheets/dragons/kanju_lv1_idle.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 5,
+   "loop": true,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "kanju",
+   "level": 1,
+   "anim": "idle"
+  },
+  {
+   "id": "kanju_lv1_attack",
+   "path": "sheets/dragons/kanju_lv1_attack.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 10,
+   "loop": false,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "kanju",
+   "level": 1,
+   "anim": "attack",
+   "hit_frame": 1
+  },
+  {
+   "id": "kanju_lv2_idle",
+   "path": "sheets/dragons/kanju_lv2_idle.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 5,
+   "loop": true,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "kanju",
+   "level": 2,
+   "anim": "idle"
+  },
+  {
+   "id": "kanju_lv2_attack",
+   "path": "sheets/dragons/kanju_lv2_attack.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 10,
+   "loop": false,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "kanju",
+   "level": 2,
+   "anim": "attack",
+   "hit_frame": 1
+  },
+  {
+   "id": "kanju_lv3_idle",
+   "path": "sheets/dragons/kanju_lv3_idle.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 5,
+   "loop": true,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "kanju",
+   "level": 3,
+   "anim": "idle"
+  },
+  {
+   "id": "kanju_lv3_attack",
+   "path": "sheets/dragons/kanju_lv3_attack.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 10,
+   "loop": false,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "kanju",
+   "level": 3,
+   "anim": "attack",
+   "hit_frame": 1
+  },
+  {
+   "id": "kanju_lv4_idle",
+   "path": "sheets/dragons/kanju_lv4_idle.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 5,
+   "loop": true,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "kanju",
+   "level": 4,
+   "anim": "idle"
+  },
+  {
+   "id": "kanju_lv4_attack",
+   "path": "sheets/dragons/kanju_lv4_attack.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 10,
+   "loop": false,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "kanju",
+   "level": 4,
+   "anim": "attack",
+   "hit_frame": 1
+  },
+  {
+   "id": "kanju_lv5_idle",
+   "path": "sheets/dragons/kanju_lv5_idle.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 5,
+   "loop": true,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "kanju",
+   "level": 5,
+   "anim": "idle"
+  },
+  {
+   "id": "kanju_lv5_attack",
+   "path": "sheets/dragons/kanju_lv5_attack.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 10,
+   "loop": false,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "kanju",
+   "level": 5,
+   "anim": "attack",
+   "hit_frame": 1
+  },
+  {
+   "id": "ehecatl_lv1_idle",
+   "path": "sheets/dragons/ehecatl_lv1_idle.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 5,
+   "loop": true,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "ehecatl",
+   "level": 1,
+   "anim": "idle"
+  },
+  {
+   "id": "ehecatl_lv1_attack",
+   "path": "sheets/dragons/ehecatl_lv1_attack.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 10,
+   "loop": false,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "ehecatl",
+   "level": 1,
+   "anim": "attack",
+   "hit_frame": 1
+  },
+  {
+   "id": "ehecatl_lv2_idle",
+   "path": "sheets/dragons/ehecatl_lv2_idle.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 5,
+   "loop": true,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "ehecatl",
+   "level": 2,
+   "anim": "idle"
+  },
+  {
+   "id": "ehecatl_lv2_attack",
+   "path": "sheets/dragons/ehecatl_lv2_attack.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 10,
+   "loop": false,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "ehecatl",
+   "level": 2,
+   "anim": "attack",
+   "hit_frame": 1
+  },
+  {
+   "id": "ehecatl_lv3_idle",
+   "path": "sheets/dragons/ehecatl_lv3_idle.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 5,
+   "loop": true,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "ehecatl",
+   "level": 3,
+   "anim": "idle"
+  },
+  {
+   "id": "ehecatl_lv3_attack",
+   "path": "sheets/dragons/ehecatl_lv3_attack.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 10,
+   "loop": false,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "ehecatl",
+   "level": 3,
+   "anim": "attack",
+   "hit_frame": 1
+  },
+  {
+   "id": "ehecatl_lv4_idle",
+   "path": "sheets/dragons/ehecatl_lv4_idle.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 5,
+   "loop": true,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "ehecatl",
+   "level": 4,
+   "anim": "idle"
+  },
+  {
+   "id": "ehecatl_lv4_attack",
+   "path": "sheets/dragons/ehecatl_lv4_attack.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 10,
+   "loop": false,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "ehecatl",
+   "level": 4,
+   "anim": "attack",
+   "hit_frame": 1
+  },
+  {
+   "id": "ehecatl_lv5_idle",
+   "path": "sheets/dragons/ehecatl_lv5_idle.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 5,
+   "loop": true,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "ehecatl",
+   "level": 5,
+   "anim": "idle"
+  },
+  {
+   "id": "ehecatl_lv5_attack",
+   "path": "sheets/dragons/ehecatl_lv5_attack.png",
+   "batch": 1,
+   "category": "dragon",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 10,
+   "loop": false,
+   "anchor": [
+    24,
+    47
+   ],
+   "dragon": "ehecatl",
+   "level": 5,
+   "anim": "attack",
+   "hit_frame": 1
+  },
+  {
+   "id": "poacher_walk",
+   "path": "sheets/enemies/poacher_walk.png",
+   "batch": 1,
+   "category": "enemy",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 8,
+   "loop": true,
+   "anchor": [
+    24,
+    47
+   ],
+   "enemy": "poacher",
+   "anim": "walk"
+  },
+  {
+   "id": "brute_walk",
+   "path": "sheets/enemies/brute_walk.png",
+   "batch": 1,
+   "category": "enemy",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 4,
+   "fps": 6,
+   "loop": true,
+   "anchor": [
+    24,
+    47
+   ],
+   "enemy": "brute",
+   "anim": "walk"
+  },
+  {
+   "id": "boss_walk",
+   "path": "sheets/enemies/boss_walk.png",
+   "batch": 1,
+   "category": "enemy",
+   "frame_w": 64,
+   "frame_h": 64,
+   "frames": 4,
+   "fps": 5,
+   "loop": true,
+   "anchor": [
+    32,
+    63
+   ],
+   "enemy": "boss",
+   "anim": "walk"
+  },
+  {
+   "id": "grass_1",
+   "path": "tiles/grass_1.png",
+   "batch": 1,
+   "category": "tile",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ]
+  },
+  {
+   "id": "grass_2",
+   "path": "tiles/grass_2.png",
+   "batch": 1,
+   "category": "tile",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ]
+  },
+  {
+   "id": "grass_3",
+   "path": "tiles/grass_3.png",
+   "batch": 1,
+   "category": "tile",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ]
+  },
+  {
+   "id": "path_h",
+   "path": "tiles/path_h.png",
+   "batch": 1,
+   "category": "tile",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ]
+  },
+  {
+   "id": "path_v",
+   "path": "tiles/path_v.png",
+   "batch": 1,
+   "category": "tile",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ]
+  },
+  {
+   "id": "path_corner_ne",
+   "path": "tiles/path_corner_ne.png",
+   "batch": 1,
+   "category": "tile",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ]
+  },
+  {
+   "id": "path_corner_nw",
+   "path": "tiles/path_corner_nw.png",
+   "batch": 1,
+   "category": "tile",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ]
+  },
+  {
+   "id": "path_corner_se",
+   "path": "tiles/path_corner_se.png",
+   "batch": 1,
+   "category": "tile",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ]
+  },
+  {
+   "id": "path_corner_sw",
+   "path": "tiles/path_corner_sw.png",
+   "batch": 1,
+   "category": "tile",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ]
+  },
+  {
+   "id": "path_end_w",
+   "path": "tiles/path_end_w.png",
+   "batch": 1,
+   "category": "tile",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ]
+  },
+  {
+   "id": "path_end_e",
+   "path": "tiles/path_end_e.png",
+   "batch": 1,
+   "category": "tile",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ]
+  },
+  {
+   "id": "path_end_n",
+   "path": "tiles/path_end_n.png",
+   "batch": 1,
+   "category": "tile",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ]
+  },
+  {
+   "id": "path_end_s",
+   "path": "tiles/path_end_s.png",
+   "batch": 1,
+   "category": "tile",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ]
+  },
+  {
+   "id": "slot_empty",
+   "path": "tiles/slot_empty.png",
+   "batch": 1,
+   "category": "tile",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ]
+  },
+  {
+   "id": "slot_highlight",
+   "path": "tiles/slot_highlight.png",
+   "batch": 1,
+   "category": "tile",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ]
+  },
+  {
+   "id": "slot_highlight_overlay",
+   "path": "tiles/slot_highlight_overlay.png",
+   "batch": 1,
+   "category": "tile",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ]
+  },
+  {
+   "id": "clutch_full",
+   "path": "tiles/clutch_full.png",
+   "batch": 1,
+   "category": "clutch",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    24,
+    47
+   ],
+   "state": "full"
+  },
+  {
+   "id": "clutch_mid",
+   "path": "tiles/clutch_mid.png",
+   "batch": 1,
+   "category": "clutch",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    24,
+    47
+   ],
+   "state": "mid"
+  },
+  {
+   "id": "clutch_low",
+   "path": "tiles/clutch_low.png",
+   "batch": 1,
+   "category": "clutch",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    24,
+    47
+   ],
+   "state": "low"
+  },
+  {
+   "id": "jaculus_javelin",
+   "path": "sheets/fx/jaculus_javelin.png",
+   "batch": 2,
+   "category": "projectile",
+   "frame_w": 24,
+   "frame_h": 9,
+   "frames": 2,
+   "fps": 12,
+   "loop": true,
+   "anchor": [
+    20,
+    4
+   ],
+   "facing": "right",
+   "rotatable": true,
+   "note": "anchor is the tip; trail drawn behind (left)"
+  },
+  {
+   "id": "jaculus_hit",
+   "path": "sheets/fx/jaculus_hit.png",
+   "batch": 2,
+   "category": "fx",
+   "frame_w": 16,
+   "frame_h": 16,
+   "frames": 4,
+   "fps": 16,
+   "loop": false,
+   "anchor": [
+    8,
+    8
+   ]
+  },
+  {
+   "id": "zmei_fireball",
+   "path": "sheets/fx/zmei_fireball.png",
+   "batch": 2,
+   "category": "projectile",
+   "frame_w": 16,
+   "frame_h": 16,
+   "frames": 4,
+   "fps": 12,
+   "loop": true,
+   "anchor": [
+    14,
+    8
+   ],
+   "facing": "right",
+   "rotatable": true
+  },
+  {
+   "id": "zmei_explosion",
+   "path": "sheets/fx/zmei_explosion.png",
+   "batch": 2,
+   "category": "fx",
+   "frame_w": 32,
+   "frame_h": 32,
+   "frames": 6,
+   "fps": 14,
+   "loop": false,
+   "anchor": [
+    16,
+    16
+   ],
+   "note": "centre on impact point; ~26px across at peak, scale for blast radius"
+  },
+  {
+   "id": "kanju_tidemist",
+   "path": "sheets/fx/kanju_tidemist.png",
+   "batch": 2,
+   "category": "projectile",
+   "frame_w": 16,
+   "frame_h": 16,
+   "frames": 4,
+   "fps": 10,
+   "loop": true,
+   "anchor": [
+    13,
+    8
+   ],
+   "facing": "right",
+   "rotatable": true
+  },
+  {
+   "id": "kanju_mist_pool",
+   "path": "sheets/fx/kanju_mist_pool.png",
+   "batch": 2,
+   "category": "fx",
+   "frame_w": 40,
+   "frame_h": 16,
+   "frames": 4,
+   "fps": 6,
+   "loop": true,
+   "anchor": [
+    20,
+    8
+   ],
+   "note": "slow-zone decal on the path; dithered for a see-through look; draw under enemies"
+  },
+  {
+   "id": "ehecatl_aura",
+   "path": "sheets/fx/ehecatl_aura.png",
+   "batch": 2,
+   "category": "aura",
+   "frame_w": 64,
+   "frame_h": 64,
+   "frames": 6,
+   "fps": 8,
+   "loop": true,
+   "anchor": [
+    32,
+    32
+   ],
+   "note": "centre on the slot centre; ring radius ~29px so it rings a 48px slot; draw behind the dragon. Use for Lv1-3"
+  },
+  {
+   "id": "ehecatl_aura_gold",
+   "path": "sheets/fx/ehecatl_aura_gold.png",
+   "batch": 2,
+   "category": "aura",
+   "frame_w": 64,
+   "frame_h": 64,
+   "frames": 6,
+   "fps": 8,
+   "loop": true,
+   "anchor": [
+    32,
+    32
+   ],
+   "note": "gold-green gale variant for Lv4-5"
+  },
+  {
+   "id": "merge_sparkle",
+   "path": "sheets/fx/merge_sparkle.png",
+   "batch": 2,
+   "category": "fx",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 6,
+   "fps": 14,
+   "loop": false,
+   "anchor": [
+    24,
+    24
+   ],
+   "note": "centre on the merged slot; swap sprite to the new level on frame 3"
+  },
+  {
+   "id": "levelup_flash",
+   "path": "sheets/fx/levelup_flash.png",
+   "batch": 2,
+   "category": "fx",
+   "frame_w": 48,
+   "frame_h": 48,
+   "frames": 6,
+   "fps": 12,
+   "loop": false,
+   "anchor": [
+    24,
+    47
+   ],
+   "note": "same frame/anchor as dragon frames (feet row 47); draw over the dragon"
+  },
+  {
+   "id": "coin_pickup",
+   "path": "sheets/fx/coin_pickup.png",
+   "batch": 2,
+   "category": "fx",
+   "frame_w": 16,
+   "frame_h": 20,
+   "frames": 6,
+   "fps": 12,
+   "loop": false,
+   "anchor": [
+    8,
+    19
+   ],
+   "note": "spawn at the kill spot; rises ~9px while spinning; fly to the coin counter after if wanted"
+  },
+  {
+   "id": "btn_summon",
+   "path": "hud/btn_summon.png",
+   "batch": 2,
+   "category": "hud",
+   "frame_w": 96,
+   "frame_h": 32,
+   "frames": 3,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ],
+   "layout": "fixed",
+   "states": [
+    "normal",
+    "pressed",
+    "disabled"
+   ],
+   "text_area": [
+    26,
+    5,
+    66,
+    18
+   ],
+   "note": "frame index = state; render cost text inside text_area (x,y,w,h, normal state; +2px y when pressed)"
+  },
+  {
+   "id": "btn_enhance",
+   "path": "hud/btn_enhance.png",
+   "batch": 2,
+   "category": "hud",
+   "frame_w": 96,
+   "frame_h": 32,
+   "frames": 3,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ],
+   "layout": "fixed",
+   "states": [
+    "normal",
+    "pressed",
+    "disabled"
+   ],
+   "text_area": [
+    26,
+    5,
+    66,
+    18
+   ],
+   "note": "frame index = state; text_area as btn_summon"
+  },
+  {
+   "id": "btn_pause",
+   "path": "hud/btn_pause.png",
+   "batch": 2,
+   "category": "hud",
+   "frame_w": 32,
+   "frame_h": 32,
+   "frames": 2,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ],
+   "layout": "fixed",
+   "states": [
+    "normal",
+    "pressed"
+   ],
+   "note": "no disabled state needed"
+  },
+  {
+   "id": "btn_resume",
+   "path": "hud/btn_resume.png",
+   "batch": 2,
+   "category": "hud",
+   "frame_w": 32,
+   "frame_h": 32,
+   "frames": 2,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ],
+   "layout": "fixed",
+   "states": [
+    "normal",
+    "pressed"
+   ],
+   "note": "shown while paused"
+  },
+  {
+   "id": "btn_restart",
+   "path": "hud/btn_restart.png",
+   "batch": 2,
+   "category": "hud",
+   "frame_w": 32,
+   "frame_h": 32,
+   "frames": 3,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ],
+   "layout": "fixed",
+   "states": [
+    "normal",
+    "pressed",
+    "disabled"
+   ]
+  },
+  {
+   "id": "btn_panel_9slice",
+   "path": "hud/btn_panel_9slice.png",
+   "batch": 2,
+   "category": "hud",
+   "frame_w": 24,
+   "frame_h": 24,
+   "frames": 3,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ],
+   "layout": "nine_slice",
+   "slice": {
+    "left": 6,
+    "right": 6,
+    "top": 5,
+    "bottom": 8
+   },
+   "states": [
+    "normal",
+    "pressed",
+    "disabled"
+   ],
+   "note": "generic gold button for Win/Lose screens (Restart, Play again); stretch centre; pressed frame is 2px lower"
+  },
+  {
+   "id": "panel_9slice",
+   "path": "hud/panel_9slice.png",
+   "batch": 2,
+   "category": "hud",
+   "frame_w": 24,
+   "frame_h": 24,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ],
+   "layout": "nine_slice",
+   "slice": {
+    "left": 6,
+    "right": 6,
+    "top": 6,
+    "bottom": 6
+   },
+   "note": "dark text panel with gold rim (results, tooltips)"
+  },
+  {
+   "id": "icon_coin",
+   "path": "hud/icon_coin.png",
+   "batch": 2,
+   "category": "hud",
+   "frame_w": 16,
+   "frame_h": 16,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    8,
+    8
+   ],
+   "layout": "fixed"
+  },
+  {
+   "id": "icon_heart",
+   "path": "hud/icon_heart.png",
+   "batch": 2,
+   "category": "hud",
+   "frame_w": 16,
+   "frame_h": 16,
+   "frames": 2,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    8,
+    8
+   ],
+   "layout": "fixed",
+   "states": [
+    "full",
+    "empty"
+   ],
+   "note": "Clutch warmth pips (frame 0 full, 1 empty)"
+  },
+  {
+   "id": "icon_warmth",
+   "path": "hud/icon_warmth.png",
+   "batch": 2,
+   "category": "hud",
+   "frame_w": 16,
+   "frame_h": 16,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    8,
+    8
+   ],
+   "layout": "fixed",
+   "note": "warmth label icon next to the Clutch HP bar"
+  },
+  {
+   "id": "bar_frame_9slice",
+   "path": "hud/bar_frame_9slice.png",
+   "batch": 2,
+   "category": "hud",
+   "frame_w": 24,
+   "frame_h": 12,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ],
+   "layout": "nine_slice",
+   "slice": {
+    "left": 4,
+    "right": 4,
+    "top": 4,
+    "bottom": 4
+   },
+   "note": "HP/warmth bar frame; inner well is 3px in from each edge"
+  },
+  {
+   "id": "bar_fill_warmth",
+   "path": "hud/bar_fill_warmth.png",
+   "batch": 2,
+   "category": "hud",
+   "frame_w": 4,
+   "frame_h": 6,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ],
+   "layout": "stretch_x",
+   "note": "tile/stretch horizontally inside the bar well"
+  },
+  {
+   "id": "wave_badge",
+   "path": "hud/wave_badge.png",
+   "batch": 2,
+   "category": "hud",
+   "frame_w": 72,
+   "frame_h": 24,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ],
+   "layout": "fixed",
+   "text_area": [
+    24,
+    6,
+    40,
+    12
+   ],
+   "note": "render \"WAVE 7/20\" in text_area"
+  },
+  {
+   "id": "enh_icon_lance_wind",
+   "path": "hud/enhance/icon_lance_wind.png",
+   "batch": 2,
+   "category": "enhance_icon",
+   "frame_w": 24,
+   "frame_h": 24,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    12,
+    12
+   ],
+   "layout": "fixed",
+   "enhancement": "lance_wind"
+  },
+  {
+   "id": "enh_card_lance_wind",
+   "path": "hud/enhance/card_lance_wind.png",
+   "batch": 2,
+   "category": "enhance_card",
+   "frame_w": 56,
+   "frame_h": 80,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ],
+   "layout": "fixed",
+   "enhancement": "lance_wind",
+   "title": "Lance Wind",
+   "effect": "+20% Jaculus damage",
+   "text_area": {
+    "title": [
+     6,
+     45,
+     44,
+     10
+    ],
+    "body": [
+     6,
+     57,
+     44,
+     16
+    ]
+   },
+   "note": "card art 56x80; show at 2x (112x160) so three fit across 360; render title/effect text in text_area"
+  },
+  {
+   "id": "enh_icon_third_maw",
+   "path": "hud/enhance/icon_third_maw.png",
+   "batch": 2,
+   "category": "enhance_icon",
+   "frame_w": 24,
+   "frame_h": 24,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    12,
+    12
+   ],
+   "layout": "fixed",
+   "enhancement": "third_maw"
+  },
+  {
+   "id": "enh_card_third_maw",
+   "path": "hud/enhance/card_third_maw.png",
+   "batch": 2,
+   "category": "enhance_card",
+   "frame_w": 56,
+   "frame_h": 80,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ],
+   "layout": "fixed",
+   "enhancement": "third_maw",
+   "title": "Third Maw",
+   "effect": "Zmei blast radius up",
+   "text_area": {
+    "title": [
+     6,
+     45,
+     44,
+     10
+    ],
+    "body": [
+     6,
+     57,
+     44,
+     16
+    ]
+   },
+   "note": "card art 56x80; show at 2x (112x160) so three fit across 360; render title/effect text in text_area"
+  },
+  {
+   "id": "enh_icon_held_tide",
+   "path": "hud/enhance/icon_held_tide.png",
+   "batch": 2,
+   "category": "enhance_icon",
+   "frame_w": 24,
+   "frame_h": 24,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    12,
+    12
+   ],
+   "layout": "fixed",
+   "enhancement": "held_tide"
+  },
+  {
+   "id": "enh_card_held_tide",
+   "path": "hud/enhance/card_held_tide.png",
+   "batch": 2,
+   "category": "enhance_card",
+   "frame_w": 56,
+   "frame_h": 80,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ],
+   "layout": "fixed",
+   "enhancement": "held_tide",
+   "title": "Held Tide",
+   "effect": "Kanju slow lasts longer",
+   "text_area": {
+    "title": [
+     6,
+     45,
+     44,
+     10
+    ],
+    "body": [
+     6,
+     57,
+     44,
+     16
+    ]
+   },
+   "note": "card art 56x80; show at 2x (112x160) so three fit across 360; render title/effect text in text_area"
+  },
+  {
+   "id": "enh_icon_wind_under_wings",
+   "path": "hud/enhance/icon_wind_under_wings.png",
+   "batch": 2,
+   "category": "enhance_icon",
+   "frame_w": 24,
+   "frame_h": 24,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    12,
+    12
+   ],
+   "layout": "fixed",
+   "enhancement": "wind_under_wings"
+  },
+  {
+   "id": "enh_card_wind_under_wings",
+   "path": "hud/enhance/card_wind_under_wings.png",
+   "batch": 2,
+   "category": "enhance_card",
+   "frame_w": 56,
+   "frame_h": 80,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ],
+   "layout": "fixed",
+   "enhancement": "wind_under_wings",
+   "title": "Wind under Wings",
+   "effect": "+10% all attack speed",
+   "text_area": {
+    "title": [
+     6,
+     45,
+     44,
+     10
+    ],
+    "body": [
+     6,
+     57,
+     44,
+     16
+    ]
+   },
+   "note": "card art 56x80; show at 2x (112x160) so three fit across 360; render title/effect text in text_area"
+  },
+  {
+   "id": "enh_icon_hoard_tithe",
+   "path": "hud/enhance/icon_hoard_tithe.png",
+   "batch": 2,
+   "category": "enhance_icon",
+   "frame_w": 24,
+   "frame_h": 24,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    12,
+    12
+   ],
+   "layout": "fixed",
+   "enhancement": "hoard_tithe"
+  },
+  {
+   "id": "enh_card_hoard_tithe",
+   "path": "hud/enhance/card_hoard_tithe.png",
+   "batch": 2,
+   "category": "enhance_card",
+   "frame_w": 56,
+   "frame_h": 80,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ],
+   "layout": "fixed",
+   "enhancement": "hoard_tithe",
+   "title": "Hoard Tithe",
+   "effect": "+coins per kill",
+   "text_area": {
+    "title": [
+     6,
+     45,
+     44,
+     10
+    ],
+    "body": [
+     6,
+     57,
+     44,
+     16
+    ]
+   },
+   "note": "card art 56x80; show at 2x (112x160) so three fit across 360; render title/effect text in text_area"
+  },
+  {
+   "id": "enh_icon_warm_the_clutch",
+   "path": "hud/enhance/icon_warm_the_clutch.png",
+   "batch": 2,
+   "category": "enhance_icon",
+   "frame_w": 24,
+   "frame_h": 24,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    12,
+    12
+   ],
+   "layout": "fixed",
+   "enhancement": "warm_the_clutch"
+  },
+  {
+   "id": "enh_card_warm_the_clutch",
+   "path": "hud/enhance/card_warm_the_clutch.png",
+   "batch": 2,
+   "category": "enhance_card",
+   "frame_w": 56,
+   "frame_h": 80,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ],
+   "layout": "fixed",
+   "enhancement": "warm_the_clutch",
+   "title": "Warm the Clutch",
+   "effect": "Heal the nest",
+   "text_area": {
+    "title": [
+     6,
+     45,
+     44,
+     10
+    ],
+    "body": [
+     6,
+     57,
+     44,
+     16
+    ]
+   },
+   "note": "card art 56x80; show at 2x (112x160) so three fit across 360; render title/effect text in text_area"
+  },
+  {
+   "id": "enh_icon_thin_shells",
+   "path": "hud/enhance/icon_thin_shells.png",
+   "batch": 2,
+   "category": "enhance_icon",
+   "frame_w": 24,
+   "frame_h": 24,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    12,
+    12
+   ],
+   "layout": "fixed",
+   "enhancement": "thin_shells"
+  },
+  {
+   "id": "enh_card_thin_shells",
+   "path": "hud/enhance/card_thin_shells.png",
+   "batch": 2,
+   "category": "enhance_card",
+   "frame_w": 56,
+   "frame_h": 80,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ],
+   "layout": "fixed",
+   "enhancement": "thin_shells",
+   "title": "Thin Shells",
+   "effect": "Cheaper summons",
+   "text_area": {
+    "title": [
+     6,
+     45,
+     44,
+     10
+    ],
+    "body": [
+     6,
+     57,
+     44,
+     16
+    ]
+   },
+   "note": "card art 56x80; show at 2x (112x160) so three fit across 360; render title/effect text in text_area"
+  },
+  {
+   "id": "enh_icon_heartfang",
+   "path": "hud/enhance/icon_heartfang.png",
+   "batch": 2,
+   "category": "enhance_icon",
+   "frame_w": 24,
+   "frame_h": 24,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    12,
+    12
+   ],
+   "layout": "fixed",
+   "enhancement": "heartfang"
+  },
+  {
+   "id": "enh_card_heartfang",
+   "path": "hud/enhance/card_heartfang.png",
+   "batch": 2,
+   "category": "enhance_card",
+   "frame_w": 56,
+   "frame_h": 80,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ],
+   "layout": "fixed",
+   "enhancement": "heartfang",
+   "title": "Heartfang",
+   "effect": "Crit chance",
+   "text_area": {
+    "title": [
+     6,
+     45,
+     44,
+     10
+    ],
+    "body": [
+     6,
+     57,
+     44,
+     16
+    ]
+   },
+   "note": "card art 56x80; show at 2x (112x160) so three fit across 360; render title/effect text in text_area"
+  },
+  {
+   "id": "enh_card_select",
+   "path": "hud/enhance/card_select_overlay.png",
+   "batch": 2,
+   "category": "enhance_card",
+   "frame_w": 60,
+   "frame_h": 84,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    2,
+    2
+   ],
+   "layout": "fixed",
+   "note": "draw at card position -2,-2 for the hovered/selected card"
+  },
+  {
+   "id": "screen_win",
+   "path": "screens/win_360x640.png",
+   "batch": 2,
+   "category": "screen",
+   "frame_w": 360,
+   "frame_h": 640,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ],
+   "layout": "fixed",
+   "pixel_scale": 2,
+   "native": "screens/win_360x640_native.png",
+   "safe_areas": {
+    "title": [
+     0,
+     40,
+     360,
+     100
+    ],
+    "illustration": [
+     0,
+     100,
+     360,
+     320
+    ],
+    "text_and_buttons": [
+     20,
+     440,
+     320,
+     180
+    ]
+   },
+   "note": "full-screen background at 360x640 (2x pixels); title and subtitle baked in; game renders stats + buttons in text_and_buttons (x,y,w,h)"
+  },
+  {
+   "id": "screen_win_native",
+   "path": "screens/win_360x640_native.png",
+   "batch": 2,
+   "category": "screen",
+   "frame_w": 180,
+   "frame_h": 320,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ],
+   "layout": "fixed",
+   "pixel_scale": 1
+  },
+  {
+   "id": "screen_lose",
+   "path": "screens/lose_360x640.png",
+   "batch": 2,
+   "category": "screen",
+   "frame_w": 360,
+   "frame_h": 640,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ],
+   "layout": "fixed",
+   "pixel_scale": 2,
+   "native": "screens/lose_360x640_native.png",
+   "safe_areas": {
+    "title": [
+     0,
+     40,
+     360,
+     100
+    ],
+    "illustration": [
+     0,
+     100,
+     360,
+     320
+    ],
+    "text_and_buttons": [
+     20,
+     440,
+     320,
+     180
+    ]
+   },
+   "note": "full-screen background at 360x640 (2x pixels); title and subtitle baked in; game renders stats + buttons in text_and_buttons (x,y,w,h)"
+  },
+  {
+   "id": "screen_lose_native",
+   "path": "screens/lose_360x640_native.png",
+   "batch": 2,
+   "category": "screen",
+   "frame_w": 180,
+   "frame_h": 320,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ],
+   "layout": "fixed",
+   "pixel_scale": 1
+  },
+  {
+   "id": "app_icon_1024",
+   "path": "icon/app_icon_1024.png",
+   "batch": 2,
+   "category": "app_icon",
+   "frame_w": 1024,
+   "frame_h": 1024,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ],
+   "layout": "fixed",
+   "opaque": true
+  },
+  {
+   "id": "app_icon_512",
+   "path": "icon/app_icon_512.png",
+   "batch": 2,
+   "category": "app_icon",
+   "frame_w": 512,
+   "frame_h": 512,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ],
+   "layout": "fixed",
+   "opaque": true
+  },
+  {
+   "id": "app_icon_180",
+   "path": "icon/app_icon_180.png",
+   "batch": 2,
+   "category": "app_icon",
+   "frame_w": 180,
+   "frame_h": 180,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ],
+   "layout": "fixed",
+   "opaque": true,
+   "palette_check": false,
+   "note": "downsampled from 1024 with Lanczos (64 grid does not divide 180), so edges are smoothed and off-palette by design"
+  },
+  {
+   "id": "app_icon_64_native",
+   "path": "icon/app_icon_64_native.png",
+   "batch": 2,
+   "category": "app_icon",
+   "frame_w": 64,
+   "frame_h": 64,
+   "frames": 1,
+   "fps": 0,
+   "loop": false,
+   "anchor": [
+    0,
+    0
+   ],
+   "layout": "fixed",
+   "opaque": true
+  }
+ ]
+}

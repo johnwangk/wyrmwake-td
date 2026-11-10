@@ -1,0 +1,15 @@
+{
+  "name": "Wyrmwake TD",
+  "short_name": "Wyrmwake",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#181425",
+  "theme_color": "#181425",
+  "icons": [
+    { "src": "assets/icon/app_icon_180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "assets/icon/app_icon_512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icon/app_icon_1024.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" }
+  ]
+}
