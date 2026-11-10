@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1b2233">
+<title>prototype</title>
+<style>
+  html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#141a28;
+    touch-action:none;overscroll-behavior:none;-webkit-user-select:none;user-select:none;
+    -webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;}
+  body{position:fixed;inset:0;}
+  canvas{display:block;position:absolute;left:0;top:0;touch-action:none;}
+  #safe{position:absolute;visibility:hidden;pointer-events:none;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);}
+</style>
+</head>
+<body>
+<div id="safe"></div>
+<canvas id="c"></canvas>
+<script>
+(function(){
+'use strict';
+// =====================================================================
+// GAME CONFIG - every player-facing name, label, description and color.
+// Rename anything here; no other code hardcodes these strings.
+// Tower ids fast/area/slow/support and enemy ids runner/brute/boss are
+// internal role keys only and are never shown to the player.
+// =====================================================================
+const CONFIG = {
+  title: 'Wyrmwake TD',
+  tagline: 'merge  ·  boost  ·  defend the Clutch',
+  unit: 'dragon', units: 'dragons',
+  base: { name: 'The Clutch', label: 'THE CLUTCH', hp: 'Warmth' },   // home base; its HP is warmth
+  levels: ['', 'Hatchling', 'Fledgling', 'Juvenile', 'Drake', 'Elder'], // confirmed by PM
+  towers: {
+    fast:    { name:'Jaculus', short:'Jaculus', color:'#f2b441', role:'Fast single-target',
+               desc:'Hurls itself like a javelin at one foe' },
+    area:    { name:'Zmei',    short:'Zmei',    color:'#e0412f', role:'Slow area fire',
+               desc:'Many maws breathe a slow bloom of fire' },
+    slow:    { name:'Kanju',   short:'Kanju',   color:'#3fc1c9', role:'Tide-mist slow',
+               desc:'Cold tidal breath slows enemy steps' },
+    support: { name:'Ehecatl', short:'Ehecatl', color:'#5fd068', role:'Wind support',
+               desc:'Wind quickens adjacent dragons; no attack' }
+  },
+  enemies: {
+    runner: { name:'Poacher',      color:'#e2c08d' },  // fast, low HP
+    brute:  { name:'Wyrmslayer',   color:'#9aa3b5' },  // slow, high HP
+    boss:   { name:'Hoardbreaker', color:'#c22d5a' }   // every 5th wave; wave 20 = final
+  },
+  // Boost cards. {fast} {area} {slow} {support} = tower short names; {unit}/{units}; {base} = base name; {hp} = base HP word.
+  boosts: {
+    fastDmg:    { name:'Lance Wind',       desc:'+20% {fast} damage',               color:'#f2b441' },
+    areaRad:    { name:'Third Maw',        desc:'{area} blast radius +25%',         color:'#e0412f' },
+    slowLen:    { name:'Held Tide',        desc:'{slow} slow lasts 50% longer',     color:'#3fc1c9' },
+    atkSpd:     { name:'Wind under Wings', desc:'+10% attack speed (all {units})',  color:'#5fd068' },
+    coinKill:   { name:'Hoard Tithe',      desc:'+1 coin per kill',                 color:'#ffd23f' },
+    heal:       { name:'Warm the Clutch',  desc:'{base} regains 6 {hp}',            color:'#ff7a9a' },
+    summonDisc: { name:'Thin Shells',      desc:'Summons cost 15% less',            color:'#f5efe0' },
+    crit:       { name:'Heartfang',        desc:'+10% crit chance (2x damage)',     color:'#ff9f43' }
+  },
+  // Balance knobs (not labels). supportSoftCap: if the board already holds this many support
+  // dragons, a summon/merge that rolls support is rerolled to one of the other three types.
+  balance: { supportSoftCap: 3, waveInterval: 7, finalBossDamage: 10, startCoins: 100 },
+  text: {
+    summon:'SUMMON', boardFull:'BOARD FULL', mergeHint:'merge {units}', boost:'BOOST', coins:'coins',
+    howTo:'Drag two identical {units} together to merge', play:'PLAY', chooseBoost:'Choose a boost',
+    paused:'Paused', resume:'RESUME', restart:'RESTART', victory:'VICTORY!', defeat:'THE CLUTCH WENT COLD',
+    wave:'Wave', nextIn:'Next in', bossIn:'{boss} in', finalWave:'Final wave!',
+    bossWave:'{boss} · WAVE', finalBoss:'FINAL {boss}', waveBonus:'wave', crit:'CRIT',
+    allCleared:'All {n} waves cleared', reached:'Reached wave {w} of {n}', time:'Time', kills:'Kills',
+    bestWave:'Best wave', wins:'Wins', newBest:'(new!)'
+  }
+};
+// Fixed save key: deliberately NOT derived from the title, so renaming keeps saves.
+const SAVE_KEY = 'mergetd-dragon-proto.save.v1';
+function fmt(str, extra){ return str.replace(/\{(\w+)\}/g, (m,k)=> extra && extra[k]!=null ? extra[k] : CONFIG.towers[k] ? CONFIG.towers[k].short :
+  k==='base' ? CONFIG.base.name : k==='hp' ? CONFIG.base.hp : k==='boss' ? CONFIG.enemies.boss.name : (typeof CONFIG[k]==='string' ? CONFIG[k] : m)); }
+const T = (k, extra) => fmt(CONFIG.text[k], extra);
+const TW = id => CONFIG.towers[id];
+document.title = CONFIG.title + ' (prototype)';
+
+// ---------- URL flags (debug only, off by default) ----------
+const Q = new URLSearchParams(location.search);
+const SPEED = Math.max(0.1, Math.min(50, parseFloat(Q.get('speed')) || 1));
+const SEED = Q.get('seed') ? (parseInt(Q.get('seed'),10)>>>0) : ((Date.now() ^ (Math.random()*1e9))>>>0);
+const SHOW_FPS = Q.has('fps');
+
+// ---------- RNG ----------
+let rs = SEED || 1;
+function rnd(){ rs |= 0; rs = rs + 0x6D2B79F5 | 0; let t = Math.imul(rs ^ rs >>> 15, 1 | rs);
+  t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }
+const pick = a => a[(rnd()*a.length)|0];
+
+// ---------- Config ----------
+const LW = 360, COLS = 5, ROWS = 3, CELL = 56, MAX_LVL = 5, TOTAL_WAVES = 20;
+const WAVE_INTERVAL = CONFIG.balance.waveInterval, FIRST_WAVE_DELAY = 3;
+const CASTLE_MAX = 20, START_COINS = CONFIG.balance.startCoins;
+const SUMMON_BASE = 10, SUMMON_STEP = 4;
+const ENH_BASE = 50, ENH_STEP = 35;
+const LOADOUT = ['fast','area','slow','support'];
+// gameplay numbers only (names/colors live in CONFIG.towers)
+const STATS = {
+  fast:{dmg:8,  cd:0.5, range:135, proj:520, pr:3},
+  area:{dmg:20, cd:1.5, range:120, proj:280, pr:5, splash:40},
+  slow: {dmg:4, cd:0.9, range:120, proj:380, pr:4, slow:0.35, slowDur:1.6},
+  support:{aura:0.15}
+};
+const LVL_COLOR = ['#fff','#ffffff','#7dff8a','#57b8ff','#d27dff','#ffd23f'];
+const dmgMult = L => Math.pow(2.4, L-1);
+const ENEMY = {
+  runner:{hp:16, spd:64, r:8,  dmg:1, coin:3},
+  brute: {hp:62, spd:30, r:12, dmg:2, coin:6},
+  boss:  {hp:420,spd:23, r:17, dmg:8, coin:40}
+};
+const hpScale = w => Math.pow(1.155, w-1);
+const ENHANCEMENTS = Object.keys(CONFIG.boosts).map(id => ({id, ...CONFIG.boosts[id]}));
+
+// ---------- Save ----------
+function loadSave(){ try{ const s = JSON.parse(localStorage.getItem(SAVE_KEY)||'{}');
+  return {bestWave: s.bestWave|0, wins: s.wins|0}; }catch(e){ return {bestWave:0,wins:0}; } }
+function writeSave(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(save)); }catch(e){} }
+let save = loadSave();
+
+// ---------- Canvas / layout ----------
+const cv = document.getElementById('c'), ctx = cv.getContext('2d', {alpha:false});
+const safeEl = document.getElementById('safe');
+let vw=0, vh=0, dpr=1, scale=1, LH=700, offX=0, offY=0;
+const L = {}; // layout
+let path = [], pathLen = 0, segs = [];
+function resize(){
+  vw = window.innerWidth; vh = window.innerHeight;
+  dpr = Math.min(window.devicePixelRatio || 1, 2); // cap at 2x: sharp enough, ~2.25x fewer pixels than 3x on iPhone
+  cv.width = Math.round(vw*dpr); cv.height = Math.round(vh*dpr);
+  cv.style.width = vw+'px'; cv.style.height = vh+'px';
+  const cs = getComputedStyle(safeEl);
+  const st = parseFloat(cs.paddingTop)||0, sr = parseFloat(cs.paddingRight)||0,
+        sb = parseFloat(cs.paddingBottom)||0, sl = parseFloat(cs.paddingLeft)||0;
+  const aw = Math.max(100, vw - sl - sr), ah = Math.max(100, vh - st - sb);
+  scale = Math.min(aw/LW, ah/600);
+  LH = Math.max(600, Math.min(860, ah/scale));
+  offX = sl + (aw - LW*scale)/2; offY = st + (ah - LH*scale)/2;
+  layout();
+}
+function layout(){
+  L.hudH = 66; L.ctrlH = 100; L.ctrlY = LH - L.ctrlH;
+  const fieldH = 20+28+CELL*ROWS+28+50+34;
+  const fy = L.hudH + Math.max(0, (L.ctrlY - L.hudH - fieldH)/2);
+  L.topY = fy + 20; L.boardX = (LW - CELL*COLS)/2; L.boardY = L.topY + 28;
+  L.botY = L.boardY + CELL*ROWS + 28; L.castleY = L.botY + 52;
+  L.laneL = L.boardX - 20; L.laneR = L.boardX + CELL*COLS + 20;
+  path = [[-24,L.topY],[L.laneR,L.topY],[L.laneR,L.botY],[L.laneL,L.botY],[L.laneL,L.castleY],[LW/2-26,L.castleY]];
+  segs = []; pathLen = 0;
+  for(let i=0;i<path.length-1;i++){ const a=path[i], b=path[i+1]; const len=Math.hypot(b[0]-a[0],b[1]-a[1]);
+    segs.push({a,b,len,start:pathLen}); pathLen += len; }
+  L.btnCoins = {x:10, y:L.ctrlY+18, w:92, h:64};
+  L.btnSummon = {x:110, y:L.ctrlY+18, w:140, h:64};
+  L.btnEnh = {x:258, y:L.ctrlY+18, w:92, h:64};
+  L.btnPause = {x:LW-46, y:12, w:36, h:36};
+}
+function posAt(d, out){
+  if(d<=0){ out.x = path[0][0] + d; out.y = path[0][1]; return out; }
+  for(const s of segs){ if(d <= s.start + s.len){ const t=(d-s.start)/s.len;
+    out.x = s.a[0]+(s.b[0]-s.a[0])*t; out.y = s.a[1]+(s.b[1]-s.a[1])*t; return out; } }
+  const e = path[path.length-1]; out.x=e[0]; out.y=e[1]; return out;
+}
+const cellCenter = i => ({x: L.boardX + (i%COLS)*CELL + CELL/2, y: L.boardY + ((i/COLS)|0)*CELL + CELL/2});
+function cellAt(x,y){ const c = Math.floor((x-L.boardX)/CELL), r = Math.floor((y-L.boardY)/CELL);
+  if(c<0||c>=COLS||r<0||r>=ROWS) return -1; return r*COLS+c; }
+const inR = (p,b) => b && p.x>=b.x && p.x<=b.x+b.w && p.y>=b.y && p.y<=b.y+b.h;
+
+// ---------- Game state ----------
+let G;
+function newGame(mode){
+  G = { mode: mode||'play', time:0, wave:0, waveTimer:FIRST_WAVE_DELAY, queue:[], spawnT:0,
+    enemies:[], dragons:new Array(COLS*ROWS).fill(null), projs:[], fx:[], texts:[],
+    coins:START_COINS, castle:CASTLE_MAX, summons:0, enhBought:0, kills:0,
+    buffs:{fastDmg:0,areaRad:0,slowLen:0,atkSpd:0,coinKill:0,summonDisc:0,crit:0},
+    bossLeaks:[], cards:null, result:null, banner:null, shake:0, newBest:false };
+  drag = null;
+}
+const summonCost = () => Math.round((SUMMON_BASE + SUMMON_STEP*G.summons) * Math.pow(0.85, G.buffs.summonDisc));
+const enhCost = () => ENH_BASE + ENH_STEP*G.enhBought;
+const freeCells = () => { const f=[]; G.dragons.forEach((h,i)=>{ if(!h) f.push(i); }); return f; };
+function rollType(){
+  const t = pick(LOADOUT);
+  if(t !== 'support') return t;
+  const n = G.dragons.reduce((k,h)=> k + (h && h.type==='support' ? 1 : 0), 0);
+  return n >= CONFIG.balance.supportSoftCap ? pick(LOADOUT.filter(x=>x!=='support')) : t;
+}
+const mkDragon = (type,lvl) => ({type, lvl, cd: rnd()*0.3, pop:1, aim:0});
+
+function summon(){
+  if(G.mode!=='play') return false;
+  const cost = summonCost(), free = freeCells();
+  if(G.coins < cost || !free.length) return false;
+  G.coins -= cost; G.summons++;
+  const i = pick(free); G.dragons[i] = mkDragon(rollType(), 1);
+  const c = cellCenter(i); ring(c.x,c.y,'#fff',30);
+  return true;
+}
+function canMerge(a,b){ return a && b && a.type===b.type && a.lvl===b.lvl && a.lvl<MAX_LVL; }
+function dropDragon(from, to){
+  if(from===to || to<0) return 'none';
+  const a = G.dragons[from], b = G.dragons[to];
+  if(!a) return 'none';
+  if(canMerge(a,b)){
+    G.dragons[from] = null; G.dragons[to] = null; // count the board without the merging pair
+    G.dragons[to] = mkDragon(rollType(), a.lvl+1);
+    const c = cellCenter(to); ring(c.x,c.y,LVL_COLOR[a.lvl+1],44); ring(c.x,c.y,'#fff',28);
+    floatText(c.x, c.y-24, CONFIG.levels[a.lvl+1]+' '+TW(G.dragons[to].type).name, LVL_COLOR[a.lvl+1]);
+    return 'merge';
+  }
+  G.dragons[to] = a; G.dragons[from] = b; // move or swap
+  return b ? 'swap' : 'move';
+}
+function openEnhance(){
+  if(G.mode!=='play') return false;
+  const cost = enhCost(); if(G.coins < cost) return false;
+  G.coins -= cost; G.enhBought++;
+  const pool = ENHANCEMENTS.slice(); const cards=[];
+  for(let k=0;k<3;k++){ cards.push(pool.splice((rnd()*pool.length)|0,1)[0]); }
+  G.cards = cards; G.mode = 'enhance'; drag = null;
+  return true;
+}
+function chooseCard(k){
+  if(G.mode!=='enhance' || !G.cards[k]) return;
+  const e = G.cards[k];
+  if(e.id==='heal'){ G.castle = Math.min(CASTLE_MAX, G.castle+6); }
+  else G.buffs[e.id]++;
+  G.banner = {text:e.name+'!', sub:fmt(e.desc), t:1.6, c:e.color};
+  G.cards = null; G.mode = 'play';
+}
+
+function startWave(w){
+  G.wave = w; G.waveTimer = WAVE_INTERVAL;
+  if(w>1){ const bonus = 4 + w; G.coins += bonus; floatText(L.btnCoins.x+46, L.btnCoins.y-8, '+'+bonus+' '+T('waveBonus'), '#ffd23f'); }
+  const boss = w%5===0;
+  const q = [];
+  const n = boss ? 3 + (w/5|0)*2 : 5 + w;
+  const brutes = boss ? (w/5|0) : Math.floor(w*0.45);
+  for(let k=0;k<n;k++) q.push(k < n-brutes ? 'runner' : 'brute');
+  for(let k=q.length-1;k>0;k--){ const j=(rnd()*(k+1))|0; [q[k],q[j]]=[q[j],q[k]]; }
+  if(boss) q.push('boss');
+  G.queue = q; G.spawnT = 0;
+  G.banner = boss ? {text: (w===TOTAL_WAVES ? T('finalBoss') : T('bossWave')+' '+w).toUpperCase(), sub:'', t:2, c:'#ff4d6d'}
+                  : {text:T('wave')+' '+w, sub:'', t:1.1, c:'#fff'};
+  if(w > save.bestWave){ save.bestWave = w; G.newBest = true; writeSave(); }
+}
+function spawnEnemy(kind){
+  const d = ENEMY[kind], w = G.wave;
+  let hp = d.hp * hpScale(w);
+  if(kind==='boss' && w===TOTAL_WAVES) hp *= 2.2;
+  G.enemies.push({kind, hp, max:hp, spd:d.spd*(1+ (kind==='runner'? w*0.012:0)) * (kind==='boss' && w===TOTAL_WAVES ? 1.3 : 1), r: kind==='boss'&&w===TOTAL_WAVES ? 21 : d.r,
+    dist: -10 - rnd()*8, slowT:0, slowF:0, x:0, y:0, dead:false, hitT:0,
+    wave: w, final: kind==='boss' && w===TOTAL_WAVES});
+}
+function endGame(win){
+  if(G.mode==='over') return;
+  G.mode = 'over'; drag = null;
+  const reached = win ? TOTAL_WAVES : G.wave;
+  if(reached > save.bestWave){ save.bestWave = reached; G.newBest = true; }
+  if(win) save.wins++;
+  writeSave();
+  G.result = {win, wave: reached, time: G.time};
+}
+
+// ---------- FX ----------
+function ring(x,y,c,r){ G.fx.push({t:0, d:0.45, x,y,c,r, k:'ring'}); }
+function boom(x,y,c,r){ G.fx.push({t:0, d:0.3, x,y,c,r, k:'boom'}); }
+function floatText(x,y,s,c){ G.texts.push({x,y,s,c,t:0,d:0.9}); if(G.texts.length>40) G.texts.shift(); }
+
+// ---------- Simulation ----------
+const tmp = {x:0,y:0};
+function supportBonus(i){
+  const c = i%COLS, r = (i/COLS)|0; let b = 0;
+  for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
+    if(!dr&&!dc) continue; const cc=c+dc, rr=r+dr;
+    if(cc<0||cc>=COLS||rr<0||rr>=ROWS) continue;
+    const h = G.dragons[rr*COLS+cc]; if(h && h.type==='support') b += STATS.support.aura*h.lvl;
+  } return b;
+}
+function damage(e, amt, crit){
+  if(e.dead) return;
+  e.hp -= amt; e.hitT = 0.08;
+  if(e.hp <= 0){ e.dead = true; G.kills++;
+    const base = ENEMY[e.kind].coin + (e.kind==='runner' ? (G.wave/4|0) : e.kind==='brute' ? (G.wave/3|0) : (10*(G.wave/5|0)));
+    const gain = base + G.buffs.coinKill; G.coins += gain;
+    floatText(e.x, e.y-10, '+'+gain, '#ffd23f');
+    boom(e.x,e.y,CONFIG.enemies[e.kind].color, e.r+8);
+  } else if(crit) floatText(e.x, e.y-12, T('crit'), '#ff9f43');
+}
+function step(dt){
+  G.time += dt;
+  if(G.banner){ G.banner.t -= dt; if(G.banner.t<=0) G.banner=null; }
+  if(G.shake>0) G.shake = Math.max(0, G.shake - dt*3);
+  // waves
+  if(G.wave < TOTAL_WAVES){ G.waveTimer -= dt; if(G.waveTimer <= 0) startWave(G.wave+1); }
+  if(G.queue.length){ G.spawnT -= dt; if(G.spawnT <= 0){ const k = G.queue.shift(); spawnEnemy(k);
+      G.spawnT = k==='brute' ? 0.7 : 0.42; if(G.queue.length && G.queue[0]==='boss') G.spawnT = 1.2; } }
+  // enemies
+  for(const e of G.enemies){
+    if(e.dead) continue;
+    let s = e.spd;
+    if(e.slowT>0){ e.slowT -= dt; s *= 1 - e.slowF * (e.kind==='boss'?0.5:1); }
+    if(e.hitT>0) e.hitT -= dt;
+    e.dist += s*dt; posAt(e.dist, e);
+    if(e.dist >= pathLen){
+      e.dead = true; const d = e.final ? CONFIG.balance.finalBossDamage : ENEMY[e.kind].dmg;
+      if(e.kind==='boss') G.bossLeaks.push(e.wave); // which boss wave leaked
+      G.castle -= d; G.shake = 1; floatText(LW/2, L.castleY-30, '-'+d, '#ff4d6d');
+      if(G.castle <= 0){ G.castle = 0; endGame(false); return; }
+    }
+  }
+  // dragons
+  const atkBase = 1 + 0.10*G.buffs.atkSpd;
+  for(let i=0;i<G.dragons.length;i++){
+    const h = G.dragons[i]; if(!h) continue;
+    if(h.pop>0) h.pop = Math.max(0, h.pop - dt*4);
+    if(h.type==='support') continue;
+    if(drag && drag.from===i && drag.moved) continue;
+    const H = STATS[h.type];
+    h.cd -= dt * (atkBase + supportBonus(i));
+    if(h.cd > 0) continue;
+    const c = cellCenter(i), range = H.range + 8*(h.lvl-1), r2 = range*range;
+    let best = null, bd = -1;
+    for(const e of G.enemies){ if(e.dead || e.dist < 0) continue;
+      const dx=e.x-c.x, dy=e.y-c.y; if(dx*dx+dy*dy <= r2){
+        let score = e.dist; if(h.type==='slow' && e.slowT>0.3) score -= 1e4; // slow tower prefers unslowed targets
+        if(score > bd){ bd = score; best = e; } } }
+    if(!best){ h.cd = 0.05; continue; }
+    h.cd = H.cd; h.aim = Math.atan2(best.y-c.y, best.x-c.x);
+    let dmg = H.dmg * dmgMult(h.lvl);
+    if(h.type==='fast') dmg *= 1 + 0.2*G.buffs.fastDmg;
+    const crit = rnd() < 0.1*G.buffs.crit; if(crit) dmg *= 2;
+    G.projs.push({type:h.type, lvl:h.lvl, x:c.x, y:c.y, tgt:best, tx:best.x, ty:best.y, spd:H.proj, dmg, crit});
+  }
+  // projectiles
+  for(const p of G.projs){
+    if(p.done) continue;
+    if(p.tgt && !p.tgt.dead){ p.tx = p.tgt.x; p.ty = p.tgt.y; }
+    const dx = p.tx-p.x, dy = p.ty-p.y, d = Math.hypot(dx,dy), mv = p.spd*dt;
+    if(d <= mv + 4){
+      p.done = true; p.x = p.tx; p.y = p.ty;
+      if(p.type==='area'){
+        const R = STATS.area.splash * (1 + 0.25*G.buffs.areaRad) * (1 + 0.08*(p.lvl-1)), R2 = R*R;
+        for(const e of G.enemies){ if(e.dead) continue; const ex=e.x-p.x, ey=e.y-p.y;
+          if(ex*ex+ey*ey <= R2 + e.r*e.r) damage(e, p.dmg, p.crit); }
+        boom(p.x,p.y,'#ffb36b',R);
+      } else if(p.tgt && !p.tgt.dead){
+        damage(p.tgt, p.dmg, p.crit);
+        if(p.type==='slow'){ const H=STATS.slow;
+          p.tgt.slowT = Math.max(p.tgt.slowT, H.slowDur*(1+0.5*G.buffs.slowLen)*(1+0.12*(p.lvl-1)));
+          p.tgt.slowF = Math.max(p.tgt.slowF, Math.min(0.7, H.slow + 0.06*(p.lvl-1))); }
+      }
+    } else { p.x += dx/d*mv; p.y += dy/d*mv; }
+  }
+  // cleanup (in place)
+  compact(G.enemies, e=>!e.dead); compact(G.projs, p=>!p.done);
+  for(const f of G.fx) f.t += dt; compact(G.fx, f=>f.t<f.d);
+  for(const t of G.texts){ t.t += dt; t.y -= 26*dt; } compact(G.texts, t=>t.t<t.d);
+  // win
+  if(G.wave===TOTAL_WAVES && !G.queue.length && !G.enemies.length) endGame(true);
+}
+function compact(a, keep){ let j=0; for(let i=0;i<a.length;i++){ if(keep(a[i])) a[j++]=a[i]; } a.length=j; }
+
+// ---------- Input ----------
+let drag = null, pressBtn = null;
+function toLogical(cx, cy){ return {x:(cx - offX)/scale, y:(cy - offY)/scale}; }
+cv.addEventListener('pointerdown', e=>{
+  e.preventDefault();
+  if(drag || pressBtn) return; // single pointer
+  try{ cv.setPointerCapture(e.pointerId); }catch(_){}
+  const p = toLogical(e.clientX, e.clientY);
+  if(G.mode==='play'){
+    const i = cellAt(p.x,p.y);
+    if(i>=0 && G.dragons[i]){ drag = {id:e.pointerId, from:i, x:p.x, y:p.y, sx:p.x, sy:p.y, moved:false}; return; }
+  }
+  pressBtn = {id:e.pointerId, x:p.x, y:p.y};
+}, {passive:false});
+cv.addEventListener('pointermove', e=>{
+  e.preventDefault();
+  if(drag && e.pointerId===drag.id){ const p = toLogical(e.clientX, e.clientY);
+    drag.x=p.x; drag.y=p.y; if(Math.hypot(p.x-drag.sx,p.y-drag.sy) > 6) drag.moved = true; }
+}, {passive:false});
+function endPointer(e, cancel){
+  if(drag && e.pointerId===drag.id){
+    const p = toLogical(e.clientX, e.clientY);
+    if(!cancel && drag.moved && G.mode==='play') dropDragon(drag.from, cellAt(p.x,p.y));
+    else if(!drag.moved) { const c = cellCenter(drag.from); G.sel = {i:drag.from, t:1.5}; }
+    drag = null; return;
+  }
+  if(pressBtn && e.pointerId===pressBtn.id){ const p = toLogical(e.clientX, e.clientY); pressBtn = null;
+    if(!cancel) tap(p); }
+}
+cv.addEventListener('pointerup', e=>{ e.preventDefault(); endPointer(e,false); }, {passive:false});
+cv.addEventListener('pointercancel', e=>endPointer(e,true));
+['touchstart','touchmove','touchend','gesturestart','gesturechange','dblclick','contextmenu'].forEach(t=>
+  document.addEventListener(t, e=>{ if(e.cancelable) e.preventDefault(); }, {passive:false}));
+window.addEventListener('keydown', e=>{
+  if(e.key===' '||e.key==='s') { if(G.mode==='play') summon(); }
+  else if(e.key==='e') { if(G.mode==='play') openEnhance(); }
+  else if(e.key==='p'||e.key==='Escape') togglePause();
+  else if(G.mode==='enhance' && '123'.includes(e.key)) chooseCard(+e.key-1);
+});
+function togglePause(){ if(G.mode==='play') G.mode='paused'; else if(G.mode==='paused') G.mode='play'; }
+function tap(p){
+  const m = G.mode;
+  if(m==='menu'){ if(inR(p,UI.play)) newGame('play'); return; }
+  if(m==='over'){ if(inR(p,UI.restart)) newGame('play'); return; }
+  if(m==='paused'){ if(inR(p,UI.resume)) G.mode='play'; else if(inR(p,UI.restart)) newGame('play'); return; }
+  if(m==='enhance'){ for(let k=0;k<3;k++) if(inR(p,UI.cards[k])) chooseCard(k); return; }
+  if(m==='play'){
+    if(inR(p,L.btnSummon)) summon();
+    else if(inR(p,L.btnEnh)) openEnhance();
+    else if(inR(p,L.btnPause)) togglePause();
+  }
+}
+document.addEventListener('visibilitychange', ()=>{ if(document.hidden && G && G.mode==='play') G.mode='paused'; });
+
+// ---------- Rendering ----------
+const UI = { play:{x:80,y:0,w:200,h:64}, restart:{x:80,y:0,w:200,h:60}, resume:{x:80,y:0,w:200,h:60}, cards:[] };
+function rr(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+function txt(s,x,y,size,color,align,weight){ ctx.font=(weight||'700')+' '+size+'px system-ui,-apple-system,Segoe UI,Roboto,sans-serif';
+  ctx.fillStyle=color; ctx.textAlign=align||'center'; ctx.textBaseline='middle'; ctx.fillText(s,x,y); }
+function button(b, label, sub, enabled, color){
+  rr(b.x,b.y,b.w,b.h,14); ctx.fillStyle = enabled ? color : '#3a4256'; ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,0.22)'; rr(b.x,b.y+b.h-6,b.w,6,3); ctx.fill();
+  txt(label, b.x+b.w/2, b.y+b.h/2-(sub?9:0), 19, enabled?'#fff':'#8a93a8');
+  if(sub) txt(sub, b.x+b.w/2, b.y+b.h/2+13, 14, enabled?'#fff6c8':'#8a93a8','center','600');
+}
+function drawDragonShape(type, lvl, x, y, s, aim){
+  // Placeholder dragon: two wings + role-shaped body + eyes. Art pass replaces this.
+  const col = TW(type).color;
+  ctx.save(); ctx.translate(x,y);
+  ctx.fillStyle = col; ctx.globalAlpha *= 0.55;
+  ctx.beginPath(); ctx.moveTo(-s*0.3,-s*0.2); ctx.lineTo(-s*1.25,-s*0.75); ctx.lineTo(-s*0.85,s*0.35); ctx.closePath();
+  ctx.moveTo(s*0.3,-s*0.2); ctx.lineTo(s*1.25,-s*0.75); ctx.lineTo(s*0.85,s*0.35); ctx.closePath(); ctx.fill();
+  ctx.globalAlpha /= 0.55;
+  ctx.strokeStyle = LVL_COLOR[lvl]; ctx.lineWidth = 2 + lvl*0.6;
+  ctx.beginPath();
+  if(type==='fast'){ ctx.moveTo(0,-s); ctx.lineTo(s*0.75,s*0.75); ctx.lineTo(-s*0.75,s*0.75); ctx.closePath(); }
+  else if(type==='area'){ ctx.rect(-s*0.75,-s*0.75,s*1.5,s*1.5); }
+  else if(type==='slow'){ ctx.moveTo(0,-s); ctx.lineTo(s*0.85,0); ctx.lineTo(0,s); ctx.lineTo(-s*0.85,0); ctx.closePath(); }
+  else { ctx.arc(0,0,s*0.8,0,Math.PI*2); }
+  ctx.fill(); ctx.stroke();
+  if(type==='support'){ ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(0,0,s*0.42,0.3,4.6); ctx.stroke(); ctx.beginPath(); ctx.arc(1,1,s*0.18,3.4,7.5); ctx.stroke(); }
+  else { ctx.fillStyle='#10151f'; ctx.beginPath(); ctx.arc(-s*0.25,s*0.05,2.2,0,7); ctx.arc(s*0.25,s*0.05,2.2,0,7); ctx.fill(); }
+  ctx.restore();
+}
+function drawDragon(h, x, y, alpha, i){
+  ctx.globalAlpha = alpha;
+  const s = 13 + h.lvl*1.6 + h.pop*6;
+  drawDragonShape(h.type, h.lvl, x, y, s, h.aim);
+  // level pips
+  for(let k=0;k<h.lvl;k++){ ctx.fillStyle = LVL_COLOR[h.lvl]; ctx.beginPath();
+    ctx.arc(x - (h.lvl-1)*4 + k*8, y+CELL/2-9, 2.6, 0, 7); ctx.fill(); }
+  txt(String(h.lvl), x+CELL/2-11, y-CELL/2+11, 12, LVL_COLOR[h.lvl]);
+  ctx.globalAlpha = 1;
+}
+function draw(now){
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.fillStyle = '#141a28'; ctx.fillRect(0,0,cv.width,cv.height);
+  let sx = 0; if(G.shake>0) sx = (Math.sin(now*0.08)*3*G.shake);
+  ctx.setTransform(dpr*scale,0,0,dpr*scale, dpr*(offX+sx*scale), dpr*offY);
+  // backdrop
+  ctx.fillStyle = '#1b2233'; ctx.fillRect(0,0,LW,LH);
+  ctx.fillStyle = '#22314a'; ctx.fillRect(0, L.hudH, LW, L.ctrlY-L.hudH);
+  // path
+  ctx.strokeStyle = '#4a3f33'; ctx.lineWidth = 30; ctx.lineJoin='round'; ctx.lineCap='butt';
+  ctx.beginPath(); ctx.moveTo(0,path[0][1]); for(let k=1;k<path.length;k++) ctx.lineTo(path[k][0],path[k][1]); ctx.stroke();
+  ctx.strokeStyle = '#5c4f40'; ctx.lineWidth = 2; ctx.setLineDash([6,8]);
+  ctx.beginPath(); ctx.moveTo(0,path[0][1]); for(let k=1;k<path.length;k++) ctx.lineTo(path[k][0],path[k][1]); ctx.stroke();
+  ctx.setLineDash([]);
+  // home base (the Clutch): stone roost, gold ring, eggs
+  const cx = LW/2, cy = L.castleY;
+  ctx.fillStyle = '#6d7891'; ctx.beginPath(); ctx.ellipse(cx, cy+6, 40, 18, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.ellipse(cx, cy+2, 32, 13, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = '#7a5532'; ctx.beginPath(); ctx.ellipse(cx, cy+1, 26, 10, 0, 0, 7); ctx.fill();
+  const warm = G.castle/CASTLE_MAX;
+  [[-12,'#f5efe0'],[0,'#f2b441'],[12,'#e6d8f5']].forEach(([dx,c])=>{ ctx.fillStyle=c; ctx.globalAlpha=0.45+0.55*warm;
+    ctx.beginPath(); ctx.ellipse(cx+dx, cy-6, 7, 10, 0, 0, 7); ctx.fill(); }); ctx.globalAlpha=1;
+  txt(CONFIG.base.label, cx, cy+32, 10, '#9aa6c0','center','700');
+  // board
+  const dragging = drag && drag.moved ? G.dragons[drag.from] : null;
+  for(let i=0;i<COLS*ROWS;i++){
+    const c = cellCenter(i), h = G.dragons[i];
+    rr(c.x-CELL/2+3, c.y-CELL/2+3, CELL-6, CELL-6, 10);
+    let fill = '#2c3d5c';
+    if(dragging && i!==drag.from && canMerge(dragging, h)) fill = '#3f7d4f';
+    ctx.fillStyle = fill; ctx.fill();
+    if(dragging && cellAt(drag.x,drag.y)===i && i!==drag.from){ ctx.strokeStyle = canMerge(dragging,h)?'#7dff8a':'#ffffff'; ctx.lineWidth=2.5; ctx.stroke(); }
+  }
+  // support-tower aura hint
+  for(let i=0;i<G.dragons.length;i++){ const h=G.dragons[i]; if(!h||h.type!=='support') continue;
+    const c=cellCenter(i); ctx.strokeStyle=TW('support').color; ctx.globalAlpha=0.35+0.2*Math.sin(now*0.005); ctx.lineWidth=2;
+    const x0=Math.max(L.boardX, c.x-CELL*1.5)+3, y0=Math.max(L.boardY, c.y-CELL*1.5)+3,
+          x1=Math.min(L.boardX+CELL*COLS, c.x+CELL*1.5)-3, y1=Math.min(L.boardY+CELL*ROWS, c.y+CELL*1.5)-3;
+    rr(x0, y0, x1-x0, y1-y0, 12); ctx.stroke(); ctx.globalAlpha=1; }
+  for(let i=0;i<G.dragons.length;i++){ const h=G.dragons[i]; if(!h) continue; const c=cellCenter(i);
+    drawDragon(h, c.x, c.y, (drag && drag.moved && drag.from===i) ? 0.3 : 1, i); }
+  if(G.sel){ G.sel.t -= 1/60; const h = G.dragons[G.sel.i];
+    if(h && h.type!=='support' && G.sel.t>0){ const c=cellCenter(G.sel.i); ctx.strokeStyle='rgba(255,255,255,0.35)'; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.arc(c.x,c.y,STATS[h.type].range+8*(h.lvl-1),0,7); ctx.stroke(); } else G.sel=null; }
+  // enemies
+  for(const e of G.enemies){ if(e.dist<-4) continue;
+    const d = ENEMY[e.kind];
+    ctx.fillStyle = e.hitT>0 ? '#fff' : (e.slowT>0 ? '#8fd3ff' : CONFIG.enemies[e.kind].color);
+    ctx.beginPath();
+    if(e.kind==='brute') ctx.rect(e.x-e.r, e.y-e.r, e.r*2, e.r*2);
+    else if(e.kind==='boss'){ for(let k=0;k<10;k++){ const a=k*Math.PI/5 + now*0.002, rad = k%2? e.r*0.72 : e.r*1.12;
+        ctx.lineTo(e.x+Math.cos(a)*rad, e.y+Math.sin(a)*rad); } ctx.closePath(); }
+    else ctx.arc(e.x,e.y,e.r,0,7);
+    ctx.fill();
+    if(e.kind==='boss'){ ctx.strokeStyle='#ffd23f'; ctx.lineWidth=2; ctx.stroke(); }
+    if(e.hp < e.max || e.kind==='boss'){ const w = e.r*2+4;
+      ctx.fillStyle='#000'; ctx.fillRect(e.x-w/2, e.y-e.r-8, w, 4);
+      ctx.fillStyle= e.kind==='boss' ? '#ff4d6d' : '#7dff8a'; ctx.fillRect(e.x-w/2, e.y-e.r-8, w*Math.max(0,e.hp/e.max), 4); }
+  }
+  // projectiles
+  for(const p of G.projs){ ctx.fillStyle = TW(p.type).color; ctx.beginPath(); ctx.arc(p.x,p.y,STATS[p.type].pr+(p.crit?1.5:0),0,7); ctx.fill(); }
+  // fx
+  for(const f of G.fx){ const k = f.t/f.d; ctx.globalAlpha = 1-k;
+    if(f.k==='ring'){ ctx.strokeStyle=f.c; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(f.x,f.y,f.r*(0.4+0.8*k),0,7); ctx.stroke(); }
+    else { ctx.fillStyle=f.c; ctx.beginPath(); ctx.arc(f.x,f.y,f.r*(0.5+0.5*k),0,7); ctx.fill(); }
+  } ctx.globalAlpha = 1;
+  for(const t of G.texts){ ctx.globalAlpha = 1 - t.t/t.d; txt(t.s, t.x, t.y, 13, t.c); } ctx.globalAlpha = 1;
+  // dragged dragon on top
+  if(dragging) drawDragon(dragging, drag.x, drag.y-8, 0.95);
+  drawHUD(now);
+  drawOverlays(now);
+  if(SHOW_FPS || SPEED!==1) txt((SHOW_FPS? fpsShown+' fps ':'')+(SPEED!==1?'x'+SPEED:''), 6, LH-8, 10, '#7f8aa3','left','600');
+}
+function drawHUD(now){
+  ctx.fillStyle = '#10151f'; ctx.fillRect(0,0,LW,L.hudH);
+  const w = Math.max(G.wave,0);
+  txt(T('wave')+' '+w+'/'+TOTAL_WAVES, 14, 20, 17, '#fff','left');
+  let next = '';
+  if(G.mode!=='menu' && G.wave<TOTAL_WAVES){ const nw = G.wave+1; next = (nw%5===0? T('bossIn') : T('nextIn'))+' '+Math.ceil(G.waveTimer)+'s'; }
+  else if(G.wave===TOTAL_WAVES) next = T('finalWave');
+  txt(next, 14, 44, 12, (G.wave+1)%5===0 && G.wave<TOTAL_WAVES ? '#ff8fa3':'#9aa6c0','left','600');
+  // castle hp
+  const bx=140, by=14, bw=160, bh=14;
+  txt(CONFIG.base.name+' '+CONFIG.base.hp.toLowerCase()+' '+Math.ceil(G.castle)+'/'+CASTLE_MAX, bx+bw/2, by+30, 12, '#cfd6e6','center','600');
+  ctx.fillStyle='#2b3245'; rr(bx,by,bw,bh,7); ctx.fill();
+  ctx.fillStyle = G.castle/CASTLE_MAX>0.35 ? '#5bd07a' : '#ff4d6d'; rr(bx,by,Math.max(7,bw*G.castle/CASTLE_MAX),bh,7); ctx.fill();
+  // pause
+  const b=L.btnPause; ctx.fillStyle='#2b3245'; rr(b.x,b.y,b.w,b.h,10); ctx.fill();
+  ctx.fillStyle='#cfd6e6'; ctx.fillRect(b.x+12,b.y+10,4,16); ctx.fillRect(b.x+20,b.y+10,4,16);
+  // controls
+  ctx.fillStyle = '#10151f'; ctx.fillRect(0,L.ctrlY,LW,LH-L.ctrlY);
+  const c=L.btnCoins; ctx.fillStyle='#1d2536'; rr(c.x,c.y,c.w,c.h,14); ctx.fill();
+  ctx.fillStyle='#ffd23f'; ctx.beginPath(); ctx.arc(c.x+20,c.y+c.h/2,9,0,7); ctx.fill();
+  txt(String(Math.floor(G.coins)), c.x+34, c.y+c.h/2, 20, '#ffd23f','left');
+  const sc = summonCost(), free = freeCells().length;
+  button(L.btnSummon, free? CONFIG.text.summon : CONFIG.text.boardFull, free? sc+' '+CONFIG.text.coins : fmt(CONFIG.text.mergeHint), G.mode==='play' && free>0 && G.coins>=sc, '#2f80ed');
+  button(L.btnEnh, CONFIG.text.boost, enhCost()+'', G.mode==='play' && G.coins>=enhCost(), '#9b51e0');
+  // banner
+  if(G.banner && G.mode!=='menu'){ const a = Math.min(1, G.banner.t*3);
+    ctx.globalAlpha = a; ctx.fillStyle='rgba(0,0,0,0.45)'; ctx.fillRect(0, L.boardY+CELL*1.5-28, LW, G.banner.sub?62:46);
+    ctx.font='700 26px system-ui,-apple-system,Segoe UI,Roboto,sans-serif';
+    const bs = Math.min(26, Math.floor(26*(LW-28)/Math.max(1, ctx.measureText(G.banner.text).width)));
+    txt(G.banner.text, LW/2, L.boardY+CELL*1.5-5, bs, G.banner.c);
+    if(G.banner.sub) txt(G.banner.sub, LW/2, L.boardY+CELL*1.5+20, 13, '#fff','center','600');
+    ctx.globalAlpha = 1; }
+}
+function panel(y,h){ ctx.fillStyle='rgba(8,10,16,0.78)'; ctx.fillRect(0,0,LW,LH); ctx.fillStyle='#1d2536'; rr(20,y,LW-40,h,18); ctx.fill(); }
+function drawOverlays(now){
+  const m = G.mode, mid = LH/2;
+  if(m==='menu'){
+    panel(mid-210, 420);
+    txt(CONFIG.title.toUpperCase(), LW/2, mid-170, CONFIG.title.length>12?30:36, '#fff');
+    txt(CONFIG.tagline, LW/2, mid-136, 13, '#9aa6c0','center','600');
+    LOADOUT.forEach((t,k)=>{ const y = mid-96+k*44; drawDragonShape(t, 1, 58, y, 13, 0);
+      txt(TW(t).name+'  ·  '+TW(t).role, 88, y-8, 14, TW(t).color, 'left'); txt(TW(t).desc, 88, y+10, 11, '#cfd6e6','left','600'); });
+    txt(T('bestWave')+': '+save.bestWave+'   '+T('wins')+': '+save.wins, LW/2, mid+92, 15, '#ffd23f');
+    txt(T('howTo'), LW/2, mid+116, 12, '#9aa6c0','center','600');
+    UI.play.y = mid+132; button(UI.play, T('play'), '', true, '#27ae60');
+  } else if(m==='enhance'){
+    panel(mid-190, 390);
+    txt(CONFIG.text.chooseBoost, LW/2, mid-160, 22, '#fff');
+    UI.cards = [];
+    G.cards.forEach((e,k)=>{ const b = {x:36, y:mid-130+k*104, w:LW-72, h:92}; UI.cards.push(b);
+      rr(b.x,b.y,b.w,b.h,14); ctx.fillStyle='#2a3550'; ctx.fill(); ctx.strokeStyle=e.color; ctx.lineWidth=2.5; ctx.stroke();
+      ctx.fillStyle=e.color; ctx.beginPath(); ctx.arc(b.x+34,b.y+b.h/2,16,0,7); ctx.fill();
+      txt(String(k+1), b.x+34, b.y+b.h/2, 16, '#10151f');
+      txt(e.name, b.x+62, b.y+32, 18, '#fff','left'); txt(fmt(e.desc), b.x+62, b.y+60, 13, '#cfd6e6','left','600'); });
+  } else if(m==='paused'){
+    panel(mid-120, 240); txt(CONFIG.text.paused, LW/2, mid-80, 28, '#fff');
+    UI.resume.y = mid-40; button(UI.resume, CONFIG.text.resume, '', true, '#27ae60');
+    UI.restart.y = mid+34; button(UI.restart, CONFIG.text.restart, '', true, '#eb5757');
+  } else if(m==='over'){
+    const r = G.result; panel(mid-170, 340);
+    txt(r.win ? T('victory') : T('defeat'), LW/2, mid-125, r.win?34:24, r.win ? '#ffd23f' : '#ff4d6d');
+    txt(r.win ? T('allCleared',{n:TOTAL_WAVES}) : T('reached',{w:r.wave,n:TOTAL_WAVES}), LW/2, mid-85, 16, '#fff','center','600');
+    txt(T('time')+' '+fmtTime(r.time)+'   '+T('kills')+' '+G.kills, LW/2, mid-58, 13, '#9aa6c0','center','600');
+    txt(T('bestWave')+': '+save.bestWave + (G.newBest?'  '+T('newBest'):''), LW/2, mid-20, 18, '#ffd23f');
+    txt(T('wins')+': '+save.wins, LW/2, mid+8, 16, '#cfd6e6');
+    UI.restart.y = mid+60; button(UI.restart, CONFIG.text.restart, '', true, '#27ae60');
+  }
+}
+const fmtTime = t => Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0');
+
+// ---------- Loop ----------
+let last = performance.now(), acc = 0, fpsShown = 60, fpsN = 0, fpsT = 0;
+const frameTimes = [], workTimes = [];
+const FIXED = 1/120;
+function frame(now){
+  const t0 = performance.now();
+  let dt = Math.min(0.1, (now - last)/1000); last = now;
+  frameTimes.push(dt*1000); if(frameTimes.length>600) frameTimes.shift();
+  fpsN++; fpsT += dt; if(fpsT>=0.5){ fpsShown = Math.round(fpsN/fpsT); fpsN=0; fpsT=0; }
+  if(G.mode==='play'){
+    acc += dt*SPEED; let n=0;
+    while(acc >= FIXED && n < 2000){ step(FIXED); acc -= FIXED; n++; if(G.mode!=='play') { acc=0; break; } }
+  } else acc = 0;
+  draw(now);
+  workTimes.push(performance.now()-t0); if(workTimes.length>600) workTimes.shift();
+  requestAnimationFrame(frame);
+}
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', ()=>setTimeout(resize,200));
+resize(); newGame('menu');
+requestAnimationFrame(t=>{ last=t; frame(t); });
+
+// ---------- Test/debug hook (read-only helpers) ----------
+window.__evo = {
+  get G(){ return G; }, get save(){ return save; }, seed: SEED, speed: SPEED,
+  frameTimes, workTimes,
+  // CSS-pixel client coords of a logical point / cell / button, for automated tests
+  toClient(x,y){ return {x: offX + x*scale, y: offY + y*scale}; },
+  cell(i){ const c = cellCenter(i); return this.toClient(c.x,c.y); },
+  btn(name){ const b = L[name] || (name.startsWith('card')? UI.cards[+name.slice(4)] : UI[name]);
+    return this.toClient(b.x+b.w/2, b.y+b.h/2); },
+  summonCost, enhCost, summon, dropDragon
+};
+})();
+</script>
+</body>
+</html>
