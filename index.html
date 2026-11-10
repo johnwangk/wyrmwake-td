@@ -203,28 +203,69 @@ function writeSave(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(save));
 let save = loadSave();
 
 // ---------- Pixel canvas / layout ----------
-// The game renders into a fixed 360x640 native canvas. CSS scales it up by an integer factor
-// (in device pixels) with nearest-neighbour sampling, letterboxed inside the safe area.
+// The game renders into a fixed 360x640 native canvas, letterboxed in the safe area.
+// Fit scale s = min(availW/360, availH/640) in CSS px. Use the whole-number scale floor(s)
+// when it still covers at least 80% of that fit; otherwise use the fractional fit so small
+// screens fill. Sampling stays nearest-neighbour either way. The displayed CSS size is snapped
+// so that CSS px * devicePixelRatio is a whole number of device pixels.
 const NW = 360, NH = 640;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d', {alpha:false});
 cv.width = NW; cv.height = NH;
 const safeEl = document.getElementById('safe'), rotEl = document.getElementById('rot');
-let vw=0, vh=0, dpr=1, pixK=1, LH=NH;
+let vw=0, vh=0, dpr=1, pixK=1, scaleMode='integer', LH=NH;
 const L = {}; // layout (logical px)
 let path = [], pathLen = 0, segs = [];
+// Blink stores used lengths in 1/64 CSS px (truncating). Pick a quantum near `css` whose
+// product with devicePixelRatio is a whole device pixel, so the canvas is not sampled
+// on a fractional device-pixel phase.
+function snapLayoutPx(css, ratio){
+  if(!(ratio>0)) return Math.max(0, css);
+  const idealDev = Math.max(0, css) * ratio;
+  const n0 = Math.round(Math.max(0, css) * 64);
+  let best = Math.max(0, n0) / 64, bestScore = Infinity, bestDist = Infinity;
+  for(let dn=-512; dn<=512; dn++){
+    const n = n0 + dn; if(n < 0) continue;
+    const q = n / 64, dev = q * ratio, devRound = Math.round(dev);
+    if(Math.abs(dev - devRound) > 1e-4) continue;
+    const score = Math.abs(devRound - idealDev), dist = Math.abs(q - css);
+    if(score < bestScore - 1e-6 || (Math.abs(score - bestScore) <= 1e-6 && dist < bestDist)){
+      bestScore = score; bestDist = dist; best = q;
+    }
+  }
+  return best;
+}
 function resize(){
   vw = window.innerWidth; vh = window.innerHeight; dpr = window.devicePixelRatio || 1;
   const cs = getComputedStyle(safeEl);
   const st = parseFloat(cs.paddingTop)||0, sr = parseFloat(cs.paddingRight)||0,
         sb = parseFloat(cs.paddingBottom)||0, sl = parseFloat(cs.paddingLeft)||0;
   const aw = Math.max(50, vw - sl - sr), ah = Math.max(50, vh - st - sb);
-  const k = Math.floor(Math.min(aw*dpr/NW, ah*dpr/NH));       // integer device-pixel factor
-  pixK = k;
-  const css = k >= 1 ? k/dpr : Math.min(aw/NW, ah/NH);          // too small for 1x: fractional fallback
-  const cw = NW*css, ch = NH*css;
-  const snap = v => Math.round(v*dpr)/dpr;                      // align to device pixels
+  const s = Math.min(aw/NW, ah/NH);                         // fit scale in CSS px
+  const whole = Math.floor(s);
+  const maxDevW = Math.max(1, Math.floor(aw*dpr + 1e-4));
+  const maxDevH = Math.max(1, Math.floor(ah*dpr + 1e-4));
+  let devW, devH;
+  if(whole >= 1 && whole / s >= 0.80){
+    devW = Math.round(NW * whole * dpr); devH = Math.round(NH * whole * dpr);
+    scaleMode = (devW >= 1 && devH >= 1 && devW <= maxDevW && devH <= maxDevH) ? 'integer' : 'fractional';
+  } else scaleMode = 'fractional';
+  if(scaleMode === 'fractional'){
+    // Fill the limiting axis; derive the other so the art stays 360:640, then snap both to device pixels.
+    if(aw/NW <= ah/NH){
+      devW = maxDevW; devH = Math.round(devW * NH / NW);
+      if(devH > maxDevH){ devH = maxDevH; devW = Math.max(1, Math.min(maxDevW, Math.round(devH * NW / NH))); }
+    } else {
+      devH = maxDevH; devW = Math.round(devH * NW / NH);
+      if(devW > maxDevW){ devW = maxDevW; devH = Math.max(1, Math.min(maxDevH, Math.round(devW * NH / NW))); }
+    }
+    devW = Math.max(1, devW); devH = Math.max(1, devH);
+  }
+  const cw = snapLayoutPx(devW / dpr, dpr), ch = snapLayoutPx(devH / dpr, dpr);
+  pixK = cw * dpr / NW;                                     // device px per art px (fractional when the fit is)
   cv.style.width = cw+'px'; cv.style.height = ch+'px';
-  cv.style.left = snap(sl + (aw-cw)/2)+'px'; cv.style.top = snap(st + (ah-ch)/2)+'px';
+  const left = snapLayoutPx(sl + Math.max(0, (aw - cw) / 2), dpr);
+  const top = snapLayoutPx(st + Math.max(0, (ah - ch) / 2), dpr);
+  cv.style.left = left+'px'; cv.style.top = top+'px';
   ctx.imageSmoothingEnabled = false;
 }
 function layout(){
@@ -511,6 +552,7 @@ function compact(a, keep){ let j=0; for(let i=0;i<a.length;i++){ if(keep(a[i])) 
 let drag = null, pressBtn = null, hoverP = null;
 const isPressed = b => !!(pressBtn && b && inR(pressBtn, b));
 const SEL_MS = 1500; // range ring display time (ms)
+// Client px -> logical px through the displayed box, so fractional scales stay aligned.
 function toLogical(cx, cy){ const r = cv.getBoundingClientRect(); return {x:(cx - r.left)*NW/r.width, y:(cy - r.top)*NH/r.height}; }
 cv.addEventListener('pointerdown', e=>{
   e.preventDefault();
@@ -1162,7 +1204,7 @@ window.__evo = {
   frameTimes, workTimes,
   // CSS-pixel client coords of a logical point / cell / button, for automated tests
   toClient(x,y){ const r = cv.getBoundingClientRect(); return {x: r.left + x*r.width/NW, y: r.top + y*r.height/NH}; },
-  get art(){ return {ready: ART.ready, keys: Object.keys(ART.sheets), errors: ART.errors.slice(), manifests: ART.manifests.slice(), pixK, cssW: cv.getBoundingClientRect().width}; },
+  get art(){ return {ready: ART.ready, keys: Object.keys(ART.sheets), errors: ART.errors.slice(), manifests: ART.manifests.slice(), pixK, scaleMode, cssW: cv.getBoundingClientRect().width}; },
   dragonSheetKey: (t,l,a) => { const s = dragonSheet(t,l,a); return s ? s.key : null; }, rotateEl: () => getComputedStyle(rotEl).display,
   sheetId: slot => { const s = sheet(slot); return s ? s.id : null; }, clutchId: f => { const s = clutchSheet(f); return s ? s.id : null; },
   enemySheetId: (kind, final) => { const s = enemySheet({kind, final}); return s ? s.id : null; },

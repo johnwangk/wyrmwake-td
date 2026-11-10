@@ -25,10 +25,12 @@ Everything uses relative paths with no CDN, so the folder works as-is on GitHub 
 
 ## Rendering
 
-The game draws to a fixed **360x640** canvas. It is scaled by the largest whole number
-that fits the screen in device pixels, with `image-rendering: pixelated` and no smoothing,
-and letterboxed on #181425. If the screen is smaller than 360x640 device pixels, it falls
-back to a fractional scale. Taps are mapped through `canvas.getBoundingClientRect()`.
+The game draws to a fixed **360x640** canvas, letterboxed on #181425. The fit scale is
+`s = min(availW/360, availH/640)` in CSS px. A whole-number scale (`floor(s)`) is used when
+it still covers at least 80% of that fit; otherwise the fractional fit is used so small
+screens fill. Sampling stays nearest-neighbour (`image-rendering: pixelated`,
+`imageSmoothingEnabled = false`). The displayed size is snapped so CSS px × devicePixelRatio
+is a whole number of device pixels. Taps are mapped through `canvas.getBoundingClientRect()`.
 
 The rotate overlay is a DOM element. It appears only when all three are true:
 `(pointer: coarse) and (hover: none)`, the screen's short side (`screen.width/height`)
